@@ -1,26 +1,58 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-toss-blue: #3182f6;
+  --color-toss-blue-dark: #1b64da;
+  --color-toss-blue-light: #e8f3ff;
+  --color-toss-gray-50: #f8f9fa;
+  --color-toss-gray-100: #f1f3f4;
+  --color-toss-gray-200: #e8eaed;
+  --color-toss-gray-300: #dadce0;
+  --color-toss-gray-400: #bdc1c6;
+  --color-toss-gray-500: #9aa0a6;
+  --color-toss-gray-600: #80868b;
+  --color-toss-gray-700: #5f6368;
+  --color-toss-gray-800: #3c4043;
+  --color-toss-gray-900: #202124;
+  
+  --radius-toss: 12px;
+  --radius-toss-lg: 16px;
+  --radius-toss-xl: 20px;
+  
+  --shadow-toss: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-toss-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-toss-button: 0 2px 4px rgba(49, 130, 246, 0.2);
+  
+  --font-family-toss: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    font-family: var(--font-family-toss);
+  }
+  
+  body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-[--radius-toss] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-[--color-toss-blue] hover:bg-[--color-toss-blue-dark] hover:scale-105 text-white shadow-[--shadow-toss-button] focus:ring-[--color-toss-blue] border border-[--color-toss-blue] hover:border-[--color-toss-blue-dark] cursor-pointer;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-[--radius-toss] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-white hover:bg-[--color-toss-gray-50] hover:scale-105 text-[--color-toss-gray-800] border border-[--color-toss-gray-300] hover:border-[--color-toss-blue] shadow-sm cursor-pointer;
+  }
+  
+  .card-toss {
+    @apply bg-white rounded-[--radius-toss-lg] shadow-[--shadow-toss] p-6;
+  }
+  
+  .input-toss {
+    @apply w-full px-4 py-3 rounded-[--radius-toss] border border-[--color-toss-gray-300] focus:border-[--color-toss-blue] focus:ring-2 focus:ring-[--color-toss-blue]/20 focus:outline-none transition-all;
+  }
 }
