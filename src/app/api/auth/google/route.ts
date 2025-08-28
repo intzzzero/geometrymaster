@@ -7,22 +7,37 @@ const getCallbackUrl = (request?: NextRequest) => {
   if (request) {
     const origin = request.headers.get('origin') || request.headers.get('referer')?.split('/').slice(0, 3).join('/')
     if (origin) {
+      console.log('Using origin from request headers:', origin)
       return `${origin}/auth/callback`
     }
   }
   
   // 환경 변수 fallback
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}/auth/callback`
+    const url = `https://${process.env.VERCEL_URL}/auth/callback`
+    console.log('Using VERCEL_URL:', url)
+    return url
   }
   if (process.env.NEXTAUTH_URL) {
+    console.log('Using NEXTAUTH_URL:', process.env.NEXTAUTH_URL)
     return `${process.env.NEXTAUTH_URL}/auth/callback`
   }
+  
+  console.log('Falling back to localhost')
   return 'http://localhost:3000/auth/callback'
 }
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Google OAuth API Request Started ===')
+    console.log('Environment variables check:', {
+      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasVercelUrl: !!process.env.VERCEL_URL,
+      hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
+      nodeEnv: process.env.NODE_ENV
+    })
+    
     const { code } = await request.json()
     
     const callbackUrl = getCallbackUrl(request)
@@ -30,8 +45,18 @@ export async function POST(request: NextRequest) {
     console.log('Auth API - Request Headers:', {
       origin: request.headers.get('origin'),
       referer: request.headers.get('referer'),
-      host: request.headers.get('host')
+      host: request.headers.get('host'),
+      userAgent: request.headers.get('user-agent')
     })
+
+    // 환경 변수 검증
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error('Missing required Google OAuth environment variables')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
 
     // 동적 OAuth2Client 생성
     const client = new OAuth2Client(
@@ -41,6 +66,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!code) {
+      console.error('No authorization code provided')
       return NextResponse.json(
         { error: 'Authorization code is required' },
         { status: 400 }
@@ -49,24 +75,74 @@ export async function POST(request: NextRequest) {
 
     console.log('Step 1: Starting Google OAuth token exchange...')
     console.log('Using callback URL:', callbackUrl)
+    console.log('Authorization code length:', code.length)
+    console.log('Google Client ID (masked):', process.env.GOOGLE_CLIENT_ID?.substring(0, 10) + '...')
+    
+    // invalid_request 오류 디버깅을 위해 여러 callback URL 시도
+    const possibleCallbackUrls = [
+      callbackUrl,
+      'https://geometrymaster.xyz/auth/callback',
+      `https://${request.headers.get('host')}/auth/callback`
+    ].filter((url, index, array) => array.indexOf(url) === index)
+    
+    console.log('Possible callback URLs to try:', possibleCallbackUrls)
     
     // Google OAuth 코드로 토큰 교환
     let tokens
-    try {
-      const result = await client.getToken(code)
-      tokens = result.tokens
-      console.log('Step 2: Token exchange successful, tokens received:', !!tokens.access_token)
-    } catch (tokenError) {
-      console.error('Step 2 ERROR: Token exchange failed:', tokenError)
+    let lastError
+    
+    // 여러 callback URL로 시도
+    for (let i = 0; i < possibleCallbackUrls.length; i++) {
+      const tryCallbackUrl = possibleCallbackUrls[i]
+      console.log(`Token exchange attempt ${i + 1} with URL:`, tryCallbackUrl)
+      
+      const tryClient = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        tryCallbackUrl
+      )
+      
+      try {
+        const result = await tryClient.getToken(code)
+        tokens = result.tokens
+        console.log(`Step 2: Token exchange successful on attempt ${i + 1}!, tokens received:`, !!tokens.access_token)
+        break
+      } catch (tokenError) {
+        lastError = tokenError
+        console.error(`Token exchange attempt ${i + 1} failed:`, tokenError instanceof Error ? tokenError.message : tokenError)
+      }
+    }
+    
+    if (!tokens && lastError) {
+      console.error('Step 2 ERROR: All token exchange attempts failed:', lastError)
       console.error('Detailed token error:', {
-        message: tokenError instanceof Error ? tokenError.message : tokenError,
-        callbackUrl,
+        message: lastError instanceof Error ? lastError.message : lastError,
+        stack: lastError instanceof Error ? lastError.stack : undefined,
+        triedCallbackUrls: possibleCallbackUrls,
         code: code?.substring(0, 20) + '...' // 보안을 위해 코드 일부만 표시
       })
+      
+      // Google API 응답에서 더 구체적인 오류 메시지 추출
+      let errorMessage = 'Unknown token exchange error'
+      if (lastError instanceof Error) {
+        if (lastError.message.includes('invalid_request')) {
+          errorMessage = 'invalid_request - Callback URL이 Google Cloud Console에 등록되지 않음'
+        } else if (lastError.message.includes('invalid_client')) {
+          errorMessage = 'invalid_client - Client ID/Secret 오류'
+        } else if (lastError.message.includes('invalid_grant')) {
+          errorMessage = 'invalid_grant - 만료된 또는 잘못된 authorization code'
+        } else {
+          errorMessage = lastError.message
+        }
+      }
+      
       return NextResponse.json(
         { 
-          error: `Token exchange failed: ${tokenError instanceof Error ? tokenError.message : tokenError}`,
-          details: 'Check Google Cloud Console OAuth settings'
+          error: `Token exchange failed: ${errorMessage}`,
+          details: {
+            message: 'Google Cloud Console에서 다음 URL들을 승인된 리디렉션 URI에 추가하세요',
+            urls: possibleCallbackUrls
+          }
         },
         { status: 401 }
       )
