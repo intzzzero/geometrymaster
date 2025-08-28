@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SHAPES } from '@/lib/supabase-client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,8 +69,21 @@ export default function Home() {
 		setShowNicknameModal(false);
 	};
 
+	// body 클래스 관리 - 도형 선택 시 스크롤 허용
+	useEffect(() => {
+		if (showShapeSelector) {
+			document.body.classList.add('allow-scroll');
+		} else {
+			document.body.classList.remove('allow-scroll');
+		}
+
+		return () => {
+			document.body.classList.remove('allow-scroll');
+		};
+	}, [showShapeSelector]);
+
 	// 사용자가 로그인했고 닉네임이 필요한 경우 모달 표시
-	React.useEffect(() => {
+	useEffect(() => {
 		if (user && user.needsNickname && !showNicknameModal) {
 			setShowNicknameModal(true);
 		}
@@ -89,7 +102,7 @@ export default function Home() {
 	}
 
 	return (
-		<div className="min-h-screen overflow-auto bg-[--color-toss-gray-50]">
+		<div className={`min-h-screen bg-[--color-toss-gray-50] ${showShapeSelector ? 'overflow-auto' : 'overflow-auto'}`}>
 			<Navigation
 				user={user}
 				onSignIn={signInWithGoogle}
@@ -97,7 +110,7 @@ export default function Home() {
 				onSignOut={signOut}
 			/>
 
-			<div className="flex items-center justify-center p-4 pt-10 min-h-[calc(100vh-64px)]">
+			<div className={`flex items-center justify-center p-4 pt-10 ${showShapeSelector ? 'min-h-screen pb-20' : 'min-h-[calc(100vh-64px)]'}`}>
 				<div className="max-w-md w-full">
 					<div className="text-center">
 						<h2 className="text-2xl text-[--color-toss-gray-600] font-medium">
