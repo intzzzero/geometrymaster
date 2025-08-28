@@ -2,15 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { OAuth2Client } from 'google-auth-library'
 
+const getCallbackUrl = () => {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}/auth/callback`
+  }
+  if (process.env.NEXTAUTH_URL) {
+    return `${process.env.NEXTAUTH_URL}/auth/callback`
+  }
+  return 'http://localhost:3000/auth/callback'
+}
+
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/callback`
+  getCallbackUrl()
 )
 
 export async function POST(request: NextRequest) {
   try {
     const { code } = await request.json()
+
+    console.log('Auth API - Callback URL:', getCallbackUrl())
+    console.log('Auth API - Environment:', {
+      VERCEL_URL: process.env.VERCEL_URL,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+      NODE_ENV: process.env.NODE_ENV
+    })
 
     if (!code) {
       return NextResponse.json(
@@ -75,7 +92,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('Auth error:', error)
+    console.error('Auth error details:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      callbackUrl: getCallbackUrl()
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
