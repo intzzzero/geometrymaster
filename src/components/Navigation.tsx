@@ -65,21 +65,20 @@ export default function Navigation({ user, onSignIn, onSignOut, onSignInRedirect
                 >
                   Rankings
                 </a>
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={onSignIn}
-                    className="btn-secondary text-sm px-3 py-2 !text-black hover:!text-black"
-                    title="팝업 로그인"
-                  >
-                    Login (Popup)
-                  </button>
-                  {onSignInRedirect && (
+                <div className="flex items-center ml-4">
+                  {onSignInRedirect ? (
                     <button
                       onClick={onSignInRedirect}
-                      className="btn-primary text-sm px-3 py-2 !text-black hover:!text-black"
-                      title="리디렉션 로그인"
+                      className="btn-primary text-sm px-4 py-2"
                     >
-                      Login (Redirect)
+                      Login
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onSignIn}
+                      className="btn-secondary text-sm px-4 py-2"
+                    >
+                      Login
                     </button>
                   )}
                 </div>
