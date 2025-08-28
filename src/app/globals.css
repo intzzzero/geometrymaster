@@ -24,6 +24,17 @@
   --shadow-toss-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
   --shadow-toss-button: 0 2px 4px rgba(49, 130, 246, 0.2);
   
+  /* 랭킹 순위별 색상 */
+  --color-gold: #facc15;
+  --color-gold-light: #fef3c7;
+  --color-gold-border: #f59e0b;
+  --color-silver: #9ca3af;
+  --color-silver-light: #f3f4f6;
+  --color-silver-border: #6b7280;
+  --color-bronze: #f97316;
+  --color-bronze-light: #fed7aa;
+  --color-bronze-border: #ea580c;
+  
   --font-family-toss: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
 }
 
@@ -75,5 +86,24 @@
   
   .input-toss {
     @apply w-full px-4 py-3 rounded-[--radius-toss] border border-[--color-toss-gray-300] focus:border-[--color-toss-blue] focus:ring-2 focus:ring-[--color-toss-blue]/20 focus:outline-none transition-all;
+  }
+  
+  /* 랭킹 순위별 스타일 */
+  .rank-1st {
+    background: linear-gradient(to bottom right, var(--color-gold-light), #fef3c7);
+    border: 2px solid var(--color-gold-border);
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15), 0 0 0 2px rgba(245, 158, 11, 0.3);
+  }
+  
+  .rank-2nd {
+    background: linear-gradient(to bottom right, var(--color-silver-light), #f3f4f6);
+    border: 2px solid var(--color-silver-border);
+    box-shadow: 0 8px 20px rgba(107, 114, 128, 0.12), 0 0 0 2px rgba(107, 114, 128, 0.2);
+  }
+  
+  .rank-3rd {
+    background: linear-gradient(to bottom right, var(--color-bronze-light), #fed7aa);
+    border: 2px solid var(--color-bronze-border);
+    box-shadow: 0 8px 20px rgba(234, 88, 12, 0.12), 0 0 0 2px rgba(234, 88, 12, 0.2);
   }
 }

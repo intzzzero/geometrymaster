@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 상위 5위 가져오기
+    // 상위 10위 가져오기
     const { data: topData, error: topError } = await supabaseServer
       .from('scores')
       .select(`
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       `)
       .eq('shape', shape)
       .order('high_score', { ascending: false })
-      .limit(5)
+      .limit(10)
 
     if (topError) {
       return NextResponse.json(
@@ -71,9 +71,9 @@ export async function GET(request: NextRequest) {
       updatedAt: item.updated_at
     }))
 
-    // 사용자가 상위 5위에 없는 경우, 사용자 정보 추가
+    // 사용자가 상위 10위에 없는 경우, 사용자 정보 추가
     let userInfo = null
-    if (userId && userRank && userRank > 5 && userScore) {
+    if (userId && userRank && userRank > 10 && userScore) {
       const { data: userData } = await supabaseServer
         .from('users')
         .select('nickname')
