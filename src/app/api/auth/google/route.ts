@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { OAuth2Client } from 'google-auth-library'
 
-const getCallbackUrl = () => {
+const getCallbackUrl = (request?: NextRequest) => {
+  // 요청에서 실제 origin 확인
+  if (request) {
+    const origin = request.headers.get('origin') || request.headers.get('referer')?.split('/').slice(0, 3).join('/')
+    if (origin) {
+      return `${origin}/auth/callback`
+    }
+  }
+  
+  // 환경 변수 fallback
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}/auth/callback`
   }
@@ -12,22 +21,24 @@ const getCallbackUrl = () => {
   return 'http://localhost:3000/auth/callback'
 }
 
-const client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  getCallbackUrl()
-)
-
 export async function POST(request: NextRequest) {
   try {
     const { code } = await request.json()
-
-    console.log('Auth API - Callback URL:', getCallbackUrl())
-    console.log('Auth API - Environment:', {
-      VERCEL_URL: process.env.VERCEL_URL,
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-      NODE_ENV: process.env.NODE_ENV
+    
+    const callbackUrl = getCallbackUrl(request)
+    console.log('Auth API - Callback URL:', callbackUrl)
+    console.log('Auth API - Request Headers:', {
+      origin: request.headers.get('origin'),
+      referer: request.headers.get('referer'),
+      host: request.headers.get('host')
     })
+
+    // 동적 OAuth2Client 생성
+    const client = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      callbackUrl
+    )
 
     if (!code) {
       return NextResponse.json(
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Step 1: Starting Google OAuth token exchange...')
-    console.log('Using callback URL:', getCallbackUrl())
+    console.log('Using callback URL:', callbackUrl)
     
     // Google OAuth 코드로 토큰 교환
     let tokens
@@ -47,8 +58,16 @@ export async function POST(request: NextRequest) {
       console.log('Step 2: Token exchange successful, tokens received:', !!tokens.access_token)
     } catch (tokenError) {
       console.error('Step 2 ERROR: Token exchange failed:', tokenError)
+      console.error('Detailed token error:', {
+        message: tokenError instanceof Error ? tokenError.message : tokenError,
+        callbackUrl,
+        code: code?.substring(0, 20) + '...' // 보안을 위해 코드 일부만 표시
+      })
       return NextResponse.json(
-        { error: `Token exchange failed: ${tokenError instanceof Error ? tokenError.message : tokenError}` },
+        { 
+          error: `Token exchange failed: ${tokenError instanceof Error ? tokenError.message : tokenError}`,
+          details: 'Check Google Cloud Console OAuth settings'
+        },
         { status: 401 }
       )
     }
@@ -127,7 +146,7 @@ export async function POST(request: NextRequest) {
     console.error('Auth error details:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
-      callbackUrl: getCallbackUrl()
+      callbackUrl: getCallbackUrl(request)
     })
     return NextResponse.json(
       { error: 'Internal server error' },
