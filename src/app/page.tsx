@@ -82,12 +82,7 @@ export default function Home() {
 		};
 	}, [showShapeSelector]);
 
-	// 사용자가 로그인했고 닉네임이 필요한 경우 모달 표시
-	useEffect(() => {
-		if (user && user.needsNickname && !showNicknameModal) {
-			setShowNicknameModal(true);
-		}
-	}, [user, showNicknameModal]);
+	// 자동 모달 출력 로직 제거 - Change Nickname 클릭 시에만 모달 출력
 
 	// Loading state
 	if (isLoading) {
@@ -108,9 +103,10 @@ export default function Home() {
 				onSignIn={signInWithGoogle}
 				onSignInRedirect={signInWithGoogleRedirect}
 				onSignOut={signOut}
+				onChangeNickname={() => setShowNicknameModal(true)}
 			/>
 
-			<div className={`flex items-center justify-center p-4 pt-10 ${showShapeSelector ? 'min-h-screen pb-20' : 'min-h-[calc(100vh-64px)]'}`}>
+			<div className={`flex items-center justify-center p-4 pt-20 ${showShapeSelector ? 'min-h-screen pb-20' : 'min-h-[calc(100vh-64px)]'}`}>
 				<div className="max-w-md w-full">
 					<div className="text-center">
 						<h2 className="text-2xl text-[--color-toss-gray-600] font-medium">

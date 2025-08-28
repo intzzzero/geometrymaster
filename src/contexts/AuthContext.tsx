@@ -7,7 +7,6 @@ export interface User {
   google_uid: string
   nickname: string
   email?: string
-  needsNickname: boolean
 }
 
 interface AuthContextType {
@@ -48,14 +47,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event.origin !== window.location.origin) return
 
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS' && event.data.user) {
-        const userWithFlag = {
-          ...event.data.user,
-          needsNickname: !event.data.user.nickname || 
-                         event.data.user.nickname.startsWith('사용자') ||
-                         event.data.user.nickname === event.data.user.email?.split('@')[0]
-        }
-        setUser(userWithFlag)
-        localStorage.setItem('geometrymaster_user', JSON.stringify(userWithFlag))
+        setUser(event.data.user)
+        localStorage.setItem('geometrymaster_user', JSON.stringify(event.data.user))
       }
     }
 
@@ -118,14 +111,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             const { user: newUser } = await response.json()
             
-            // 닉네임이 자동 생성된 경우 수정 필요 플래그 설정
-            const userWithFlag = {
-              ...newUser,
-              needsNickname: !newUser.nickname || newUser.nickname.startsWith('사용자')
-            }
-
-            setUser(userWithFlag)
-            localStorage.setItem('geometrymaster_user', JSON.stringify(userWithFlag))
+            setUser(newUser)
+            localStorage.setItem('geometrymaster_user', JSON.stringify(newUser))
           } catch (error) {
             console.error('Authentication error:', error)
             alert('로그인에 실패했습니다. 다시 시도해주세요.')
@@ -200,8 +187,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const updatedUser = { 
         ...user, 
-        nickname, 
-        needsNickname: false 
+        nickname
       }
       
       setUser(updatedUser)

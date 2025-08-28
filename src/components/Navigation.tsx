@@ -4,10 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 interface NavigationProps {
-	user: { id: string; nickname: string; needsNickname: boolean } | null;
+	user: { id: string; nickname: string } | null;
 	onSignIn: () => void;
 	onSignOut: () => void;
 	onSignInRedirect?: () => void;
+	onChangeNickname?: () => void;
 }
 
 export default function Navigation({
@@ -15,12 +16,13 @@ export default function Navigation({
 	onSignIn,
 	onSignOut,
 	onSignInRedirect,
+	onChangeNickname,
 }: NavigationProps) {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [showMobileMenu, setShowMobileMenu] = useState(false);
 	
 	return (
-		<nav className="bg-white shadow-sm border-b border-[--color-toss-gray-200] sticky top-0 z-50">
+		<nav className="bg-white shadow-sm border-b border-[--color-toss-gray-200] fixed top-0 left-0 right-0 z-50">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-between items-center h-16">
 					{/* 로고 */}
@@ -51,7 +53,18 @@ export default function Navigation({
 										{user.nickname}
 									</span>
 									{showDropdown && (
-										<div className="absolute right-0 top-full mt-1 bg-white rounded-[--radius-toss] shadow-[--shadow-toss-lg] border border-[--color-toss-gray-200] py-1 min-w-[120px] z-50">
+										<div className="absolute right-0 top-full mt-1 bg-white rounded-[--radius-toss] shadow-[--shadow-toss-lg] border border-[--color-toss-gray-200] py-1 min-w-[150px] z-50">
+											{onChangeNickname && (
+												<button
+													onClick={() => {
+														onChangeNickname();
+														setShowDropdown(false);
+													}}
+													className="w-full px-4 py-2 text-left text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-gray-800] hover:bg-[--color-toss-gray-50] transition-colors cursor-pointer"
+												>
+													Change Nickname
+												</button>
+											)}
 											<button
 												onClick={onSignOut}
 												className="w-full px-4 py-2 text-left text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-gray-800] hover:bg-[--color-toss-gray-50] transition-colors cursor-pointer"
@@ -128,6 +141,17 @@ export default function Navigation({
 									<div className="px-3 py-2 text-sm text-[--color-toss-gray-800] font-medium border-t border-[--color-toss-gray-200] mt-2 pt-3">
 										{user.nickname}
 									</div>
+									{onChangeNickname && (
+										<button
+											onClick={() => {
+												onChangeNickname();
+												setShowMobileMenu(false);
+											}}
+											className="block w-full text-left px-3 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] hover:bg-[--color-toss-gray-50] rounded-[--radius-toss] transition-colors"
+										>
+											Change Nickname
+										</button>
+									)}
 									<button
 										onClick={() => {
 											onSignOut();

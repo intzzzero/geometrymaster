@@ -106,7 +106,7 @@ export default function RankingPage() {
 				onSignOut={signOut}
 			/>
 
-			<div className="min-h-[calc(100vh-64px)] flex items-start justify-center p-4 pt-8">
+			<div className="min-h-[calc(100vh-64px)] flex items-start justify-center p-4 pt-24">
 				<div className="max-w-2xl w-full">
 					<div className="text-center mb-6">
 						<h1 className="text-2xl md:text-3xl font-bold text-[--color-toss-gray-900] mb-2">

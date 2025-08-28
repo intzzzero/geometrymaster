@@ -52,16 +52,11 @@ function AuthCallbackContent() {
 
           const { user } = await response.json()
 
-          const userWithFlag = {
-            ...user,
-            needsNickname: !user.nickname || user.nickname.startsWith('사용자') || user.nickname === user.email?.split('@')[0]
-          }
-
           // 팝업인지 확인
           if (window.opener) {
             window.opener.postMessage({
               type: 'GOOGLE_AUTH_SUCCESS',
-              user: userWithFlag
+              user
             }, window.location.origin)
             window.close()
             return
@@ -70,7 +65,7 @@ function AuthCallbackContent() {
           // 직접 리디렉션인 경우 메시지를 보내고 홈으로
           window.postMessage({
             type: 'GOOGLE_AUTH_SUCCESS',
-            user: userWithFlag
+            user
           }, window.location.origin)
           
           setStatus('success')
