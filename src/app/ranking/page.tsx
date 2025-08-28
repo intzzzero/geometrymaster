@@ -35,9 +35,9 @@ export default function RankingPage() {
 
 	const shapes = [
 		{ key: SHAPES.CIRCLE, name: 'Circle', emoji: '⭕' },
-		{ key: SHAPES.STAR5, name: 'Star', emoji: '⭐' },
-		{ key: SHAPES.SQUARE, name: 'Square', emoji: '🟦' },
 		{ key: SHAPES.TRIANGLE, name: 'Triangle', emoji: '🔺' },
+		{ key: SHAPES.SQUARE, name: 'Square', emoji: '🟦' },
+		{ key: SHAPES.STAR5, name: 'Star', emoji: '⭐' },
 	];
 
 	// 랭킹 페이지에서는 스크롤 허용
@@ -98,7 +98,7 @@ export default function RankingPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-[--color-toss-gray-50]">
+		<div className="min-h-screen bg-[--color-toss-gray-50] overflow-auto">
 			<Navigation
 				user={user}
 				onSignIn={signInWithGoogle}
@@ -106,13 +106,13 @@ export default function RankingPage() {
 				onSignOut={signOut}
 			/>
 
-			<div className="flex items-center justify-center p-4 pt-16">
+			<div className="min-h-[calc(100vh-64px)] flex items-start justify-center p-4 pt-8">
 				<div className="max-w-2xl w-full">
-					<div className="text-center mb-8">
-						<h1 className="text-3xl font-bold text-[--color-toss-gray-900] mb-3">
+					<div className="text-center mb-6">
+						<h1 className="text-2xl md:text-3xl font-bold text-[--color-toss-gray-900] mb-2">
 							Rankings
 						</h1>
-						<p className="text-lg text-[--color-toss-gray-600] font-medium">
+						<p className="text-base md:text-lg text-[--color-toss-gray-600] font-medium">
 							Check the top records for each shape
 						</p>
 					</div>
@@ -122,7 +122,7 @@ export default function RankingPage() {
 							<p className="text-[--color-toss-gray-800] font-medium mb-3">
 								Select a shape
 							</p>
-							<div className="flex flex-wrap justify-center gap-2">
+							<div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-2 max-w-sm mx-auto md:max-w-none">
 								{shapes.map((shape) => (
 									<button
 										key={shape.key}
@@ -227,36 +227,38 @@ export default function RankingPage() {
 										return (
 											<div
 												key={item.rank}
-												className={`flex items-center justify-between p-4 rounded-[--radius-toss] ${borderStyle}`}
+												className={`flex items-center justify-between p-3 md:p-4 rounded-[--radius-toss] ${borderStyle}`}
 												style={inlineStyle}
 											>
-												<div className="flex items-center gap-4">
-													<div className="text-lg font-bold min-w-[60px]">
+												<div className="flex items-center gap-3">
+													<div className="text-base md:text-lg font-bold min-w-[40px] md:min-w-[50px] flex-shrink-0">
 														{getRankIcon(item.rank)}
 													</div>
-													<div>
-														<p
-															className={`font-semibold ${
-																isCurrentUser
-																	? 'text-[--color-toss-blue]'
-																	: 'text-[--color-toss-gray-900]'
-															}`}
-														>
-															{item.nickname}
+													<div className="flex-1 min-w-0">
+														<div className="flex items-center gap-2 flex-wrap">
+															<p
+																className={`font-semibold text-sm md:text-base truncate ${
+																	isCurrentUser
+																		? 'text-[--color-toss-blue]'
+																		: 'text-[--color-toss-gray-900]'
+																}`}
+															>
+																{item.nickname}
+															</p>
 															{isCurrentUser && (
-																<span className="ml-2 text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full">
+																<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full flex-shrink-0">
 																	나
 																</span>
 															)}
-														</p>
-														<p className="text-xs text-[--color-toss-gray-500]">
-															{item.updatedAt}
+														</div>
+														<p className="text-xs text-[--color-toss-gray-500] mt-1">
+															{new Date(item.updatedAt).toISOString().split('T')[0]}
 														</p>
 													</div>
 												</div>
-												<div className="text-right">
+												<div className="text-right flex-shrink-0">
 													<p
-														className={`text-xl font-bold ${
+														className={`text-lg md:text-xl font-bold ${
 															isCurrentUser
 																? 'text-[--color-toss-blue]'
 																: 'text-[--color-toss-blue]'
@@ -280,25 +282,27 @@ export default function RankingPage() {
 												<div className="flex-1 h-px bg-[--color-toss-gray-300]"></div>
 											</div>
 
-											<div className="flex items-center justify-between p-4 rounded-[--radius-toss] bg-white border-2 border-[--color-toss-blue] ring-2 ring-[--color-toss-blue]/20">
-												<div className="flex items-center gap-4">
-													<div className="text-lg font-bold min-w-[60px] text-[--color-toss-blue]">
+											<div className="flex items-center justify-between p-3 md:p-4 rounded-[--radius-toss] bg-white border-2 border-[--color-toss-blue] ring-2 ring-[--color-toss-blue]/20">
+												<div className="flex items-center gap-3">
+													<div className="text-base md:text-lg font-bold min-w-[40px] md:min-w-[50px] flex-shrink-0 text-[--color-toss-blue]">
 														#{userInfo.rank}
 													</div>
-													<div>
-														<p className="font-semibold text-[--color-toss-blue]">
-															{userInfo.nickname}
-															<span className="ml-2 text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full">
+													<div className="flex-1 min-w-0">
+														<div className="flex items-center gap-2 flex-wrap">
+															<p className="font-semibold text-sm md:text-base truncate text-[--color-toss-blue]">
+																{userInfo.nickname}
+															</p>
+															<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full flex-shrink-0">
 																나
 															</span>
-														</p>
-														<p className="text-xs text-[--color-toss-gray-500]">
-															{userInfo.updatedAt}
+														</div>
+														<p className="text-xs text-[--color-toss-gray-500] mt-1">
+															{new Date(userInfo.updatedAt).toISOString().split('T')[0]}
 														</p>
 													</div>
 												</div>
-												<div className="text-right">
-													<p className="text-xl font-bold text-[--color-toss-blue]">
+												<div className="text-right flex-shrink-0">
+													<p className="text-lg md:text-xl font-bold text-[--color-toss-blue]">
 														{userInfo.score} pts
 													</p>
 												</div>

@@ -103,16 +103,13 @@ export default function Home() {
 
 			<div className="flex items-center justify-center p-4 pt-16 h-full overflow-y-auto">
 				<div className="max-w-md w-full">
-					<div className="text-center mb-8">
-						<h1 className="text-4xl font-bold text-[--color-toss-gray-900] mb-3">
-							GeometryMaster
-						</h1>
+					<div className="text-center mb-2">
 						<p className="text-lg text-[--color-toss-gray-600] font-medium">
 							Draw. Score. Master it.
 						</p>
 					</div>
 
-					<div className="card-toss mb-6">
+					<div className="card-toss mb-22">
 						{!user ? (
 							<div className="text-center">
 								<div className="mb-6">
