@@ -58,12 +58,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 동적 OAuth2Client 생성
-    const client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      callbackUrl
-    )
 
     if (!code) {
       console.error('No authorization code provided')
@@ -148,7 +142,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    if (!tokens.access_token) {
+    if (!tokens?.access_token) {
       console.error('Step 2 ERROR: No access token received')
       return NextResponse.json(
         { error: 'Failed to get access token' },
