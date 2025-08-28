@@ -14,10 +14,10 @@ export default function Home() {
   const router = useRouter()
 
   const shapes = [
-    { key: SHAPES.CIRCLE, name: 'Circle', emoji: '⭕' },
-    { key: SHAPES.STAR5, name: 'Star', emoji: '⭐' },
-    { key: SHAPES.SQUARE, name: 'Square', emoji: '🟦' },
-    { key: SHAPES.TRIANGLE, name: 'Triangle', emoji: '🔺' }
+    { key: SHAPES.CIRCLE, name: 'Circle', emoji: '⭕', difficulty: 'Easy', stars: '⭐' },
+    { key: SHAPES.TRIANGLE, name: 'Triangle', emoji: '🔺', difficulty: 'Medium', stars: '⭐⭐' },
+    { key: SHAPES.SQUARE, name: 'Square', emoji: '🟦', difficulty: 'Hard', stars: '⭐⭐⭐' },
+    { key: SHAPES.STAR5, name: 'Star', emoji: '⭐', difficulty: 'Expert', stars: '⭐⭐⭐⭐' }
   ]
 
   const handleStartGame = () => {
@@ -101,9 +101,15 @@ export default function Home() {
                           className="flex flex-col items-center p-4 rounded-[--radius-toss] border-2 border-[--color-toss-gray-200] hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light] hover:scale-105 transition-all duration-200 cursor-pointer"
                         >
                           <span className="text-3xl mb-2">{shape.emoji}</span>
-                          <span className="text-sm font-medium text-[--color-toss-gray-800]">
+                          <span className="text-sm font-medium text-[--color-toss-gray-800] mb-1">
                             {shape.name}
                           </span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-orange-600 font-medium">
+                              {shape.difficulty}
+                            </span>
+                            <span className="text-xs">{shape.stars}</span>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -153,9 +159,15 @@ export default function Home() {
                           className="flex flex-col items-center p-4 rounded-[--radius-toss] border-2 border-[--color-toss-gray-200] hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light] hover:scale-105 transition-all duration-200 cursor-pointer"
                         >
                           <span className="text-3xl mb-2">{shape.emoji}</span>
-                          <span className="text-sm font-medium text-[--color-toss-gray-800]">
+                          <span className="text-sm font-medium text-[--color-toss-gray-800] mb-1">
                             {shape.name}
                           </span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-orange-600 font-medium">
+                              {shape.difficulty}
+                            </span>
+                            <span className="text-xs">{shape.stars}</span>
+                          </div>
                         </button>
                       ))}
                     </div>

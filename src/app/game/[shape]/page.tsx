@@ -142,11 +142,8 @@ export default function GamePage() {
 						←
 					</button> */}
 					<div className="text-center bg-white/90 backdrop-blur-sm rounded-[--radius-toss-lg] px-6 py-3">
-						<div className="text-3xl mb-1">
-							{shape === SHAPES.CIRCLE && '⭕'}
-							{shape === SHAPES.STAR5 && '⭐'}
-							{shape === SHAPES.SQUARE && '🟦'}
-							{shape === SHAPES.TRIANGLE && '🔺'}
+						<div className="text-lg font-bold text-[--color-toss-gray-800]">
+							Draw a {shapeNames[shape as keyof typeof shapeNames]}
 						</div>
 					</div>
 					<div></div> {/* 균형을 위한 빈 공간 */}

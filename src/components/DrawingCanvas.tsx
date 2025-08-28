@@ -242,7 +242,14 @@ export default function DrawingCanvas({
       
       {/* 안내 텍스트 - fullScreen 모드에서는 더 큰 텍스트 */}
       {allPaths.length === 0 && !isDrawing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            display: 'grid',
+            placeItems: 'center',
+            minHeight: fullScreen ? '100vh' : `${actualHeight}px`
+          }}
+        >
           <div className={`text-center text-[--color-toss-gray-500] ${fullScreen ? 'text-lg' : ''}`}>
             <p className={`font-medium mb-1 ${fullScreen ? 'text-xl mb-3' : 'text-sm'}`}>
               {disabled ? 'Drawing is disabled' : 'Draw a shape here'}

@@ -127,7 +127,7 @@ export function scoreCircle(points: Point[]): ScoringResult {
   if (points.length < 10) {
     return {
       score: 0,
-      feedback: "너무 짧은 선입니다. 더 긴 원을 그려보세요.",
+      feedback: "The line is too short. Try drawing a longer circle.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -160,17 +160,17 @@ export function scoreCircle(points: Point[]): ScoringResult {
   
   let feedback = ""
   if (finalScore >= 95) {
-    feedback = "완벽한 원이에요! 🎉"
+    feedback = "Perfect circle! 🎉"
   } else if (finalScore >= 85) {
-    feedback = "훌륭한 원입니다! 👏"
+    feedback = "Excellent circle! 👏"
   } else if (finalScore >= 75) {
-    feedback = "좋은 원이에요! 조금 더 정확히 그려보세요."
+    feedback = "Good circle! Try drawing it a bit more accurately."
   } else if (finalScore >= 65) {
-    feedback = "괜찮은 원입니다. 더 둥글게 그려보세요."
+    feedback = "Decent circle. Try making it more round."
   } else if (finalScore >= 45) {
-    feedback = "원 모양에 가깝지만 개선이 필요해요."
+    feedback = "Close to a circle shape but needs improvement."
   } else {
-    feedback = "다시 도전해보세요! 더 둥근 원을 그려보세요."
+    feedback = "Try again! Draw a more round circle."
   }
   
   return {
@@ -189,7 +189,7 @@ export function scoreStar(points: Point[]): ScoringResult {
   if (points.length < 15) {
     return {
       score: 0,
-      feedback: "너무 짧은 선입니다. 더 큰 별을 그려보세요.",
+      feedback: "The line is too short. Try drawing a bigger star.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -231,17 +231,17 @@ export function scoreStar(points: Point[]): ScoringResult {
   
   let feedback = ""
   if (finalScore >= 95) {
-    feedback = "완벽한 별이에요! ⭐️"
+    feedback = "Perfect star! ⭐️"
   } else if (finalScore >= 85) {
-    feedback = "훌륭한 별입니다! 👏"
+    feedback = "Excellent star! 👏"
   } else if (finalScore >= 75) {
-    feedback = "좋은 별이에요! 뾰족한 부분을 더 날카롭게 그려보세요."
+    feedback = "Good star! Try making the points sharper."
   } else if (finalScore >= 65) {
-    feedback = "괜찮은 별입니다. 5개의 꼭짓점을 더 분명하게 표현해보세요."
+    feedback = "Decent star. Try making the 5 points more distinct."
   } else if (finalScore >= 45) {
-    feedback = "별 모양에 가깝지만 개선이 필요해요."
+    feedback = "Close to a star shape but needs improvement."
   } else {
-    feedback = "다시 도전해보세요! 5개의 뾰족한 꼭짓점을 가진 별을 그려보세요."
+    feedback = "Try again! Draw a star with 5 sharp points."
   }
   
   return {
@@ -260,7 +260,7 @@ export function scoreSquare(points: Point[]): ScoringResult {
   if (points.length < 12) {
     return {
       score: 0,
-      feedback: "너무 짧은 선입니다. 더 큰 사각형을 그려보세요.",
+      feedback: "The line is too short. Try drawing a bigger square.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -290,22 +290,22 @@ export function scoreSquare(points: Point[]): ScoringResult {
   const accuracy = (cornerScore * 0.25 + straightness * 0.25 + rightAngleScore * 0.35 + lengthBalance * 0.10 + squareRatio * 0.05)
   const score = Math.round((accuracy * 0.90 + completeness * 0.10) * 100)
   
-  // 사각형 매우 까다롭게 채점 - 코너가 4개가 아니거나 직각이 부정확하면 큰 감점
-  const finalScore = (cornerScore < 0.7 || rightAngleScore < 0.5) ? Math.min(score, 25) : score
+  // 사각형 채점 기준 완화 - 코너가 4개가 아니거나 직각이 부정확하면 감점
+  const finalScore = (cornerScore < 0.5 || rightAngleScore < 0.3) ? Math.min(score, 40) : score
   
   let feedback = ""
   if (finalScore >= 95) {
-    feedback = "완벽한 사각형이에요! 🟦"
+    feedback = "Perfect square! 🟦"
   } else if (finalScore >= 85) {
-    feedback = "훌륭한 사각형입니다! 👏"
+    feedback = "Excellent square! 👏"
   } else if (finalScore >= 75) {
-    feedback = "좋은 사각형이에요! 모서리를 더 정확히 그려보세요."
+    feedback = "Good square! Try drawing the corners more accurately."
   } else if (finalScore >= 65) {
-    feedback = "괜찮은 사각형입니다. 4개의 직각을 더 정확히 만들어보세요."
+    feedback = "Decent square. Try making the 4 right angles more precise."
   } else if (finalScore >= 45) {
-    feedback = "사각형 모양에 가깝지만 개선이 필요해요."
+    feedback = "Close to a square shape but needs improvement."
   } else {
-    feedback = "다시 도전해보세요! 4개의 직각을 가진 사각형을 그려보세요."
+    feedback = "Try again! Draw a square with 4 right angles."
   }
   
   return {
@@ -443,8 +443,8 @@ function calculateRightAngles(corners: Point[]): number {
       const angle = Math.acos(clampedCosValue)
       const deviationFrom90 = Math.abs(angle - Math.PI / 2)
       
-      // 85도~95도 범위를 엄격하게 적용 (±5도)
-      const allowedDeviation = Math.PI / 36 // 5도
+      // 80도~100도 범위를 적용 (±10도로 완화)
+      const allowedDeviation = Math.PI / 18 // 10도
       if (deviationFrom90 <= allowedDeviation) {
         rightAngleScore += Math.max(0, 1 - deviationFrom90 / allowedDeviation)
       }
@@ -506,7 +506,7 @@ export function scoreTriangle(points: Point[]): ScoringResult {
   if (points.length < 10) {
     return {
       score: 0,
-      feedback: "너무 짧은 선입니다. 더 큰 삼각형을 그려보세요.",
+      feedback: "The line is too short. Try drawing a bigger triangle.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -538,17 +538,17 @@ export function scoreTriangle(points: Point[]): ScoringResult {
   
   let feedback = ""
   if (finalScore >= 95) {
-    feedback = "완벽한 삼각형이에요! 🔺"
+    feedback = "Perfect triangle! 🔺"
   } else if (finalScore >= 85) {
-    feedback = "훌륭한 삼각형입니다! 👏"
+    feedback = "Excellent triangle! 👏"
   } else if (finalScore >= 75) {
-    feedback = "좋은 삼각형이에요! 꼭짓점을 더 정확히 그려보세요."
+    feedback = "Good triangle! Try drawing the vertices more accurately."
   } else if (finalScore >= 65) {
-    feedback = "괜찮은 삼각형입니다. 3개의 직선을 더 정확히 연결해보세요."
+    feedback = "Decent triangle. Try connecting the 3 straight lines more precisely."
   } else if (finalScore >= 45) {
-    feedback = "삼각형 모양에 가깝지만 개선이 필요해요."
+    feedback = "Close to a triangle shape but needs improvement."
   } else {
-    feedback = "다시 도전해보세요! 3개의 직선으로 이루어진 삼각형을 그려보세요."
+    feedback = "Try again! Draw a triangle made of 3 straight lines."
   }
   
   return {
