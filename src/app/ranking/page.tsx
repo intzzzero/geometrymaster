@@ -34,10 +34,10 @@ export default function RankingPage() {
 	const router = useRouter();
 
 	const shapes = [
-		{ key: SHAPES.CIRCLE, name: 'Circle', emoji: '⭕' },
-		{ key: SHAPES.TRIANGLE, name: 'Triangle', emoji: '🔺' },
-		{ key: SHAPES.SQUARE, name: 'Square', emoji: '🟦' },
-		{ key: SHAPES.STAR5, name: 'Star', emoji: '⭐' },
+		{ key: SHAPES.CIRCLE },
+		{ key: SHAPES.TRIANGLE },
+		{ key: SHAPES.SQUARE },
+		{ key: SHAPES.STAR5 },
 	];
 
 	// 랭킹 페이지에서는 스크롤 허용
@@ -122,32 +122,97 @@ export default function RankingPage() {
 							<p className="text-[--color-toss-gray-800] font-medium mb-3">
 								Select a shape
 							</p>
-							<div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-2 max-w-sm mx-auto md:max-w-none">
-								{shapes.map((shape) => (
-									<button
-										key={shape.key}
-										onClick={() => setSelectedShape(shape.key)}
-										className={`px-4 py-2 rounded-[--radius-toss] border-2 transition-all duration-200 cursor-pointer ${
-											selectedShape === shape.key
-												? 'border-black bg-black text-white shadow-[--shadow-toss-button]'
-												: 'border-[--color-toss-gray-200] bg-white hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light]'
-										}`}
-									>
-										<span
-											className={`text-sm font-medium ${
-												selectedShape === shape.key
-													? 'text-white'
-													: 'text-[--color-toss-gray-800]'
+							<div
+								className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 max-w-lg mx-auto md:max-w-none"
+								id="shape-selector-container"
+							>
+								{shapes.map((shape) => {
+									const isSelected = selectedShape === shape.key;
+									const iconColor = isSelected ? 'white' : 'black';
+
+									return (
+										<button
+											key={shape.key}
+											onClick={() => setSelectedShape(shape.key)}
+											className={`p-4 rounded-[--radius-toss] border-2 transition-all duration-200 cursor-pointer flex items-center justify-center ${
+												isSelected
+													? 'border-black bg-black shadow-[--shadow-toss-button]'
+													: 'border-[--color-toss-gray-200] bg-white hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light]'
 											}`}
 										>
-											{shape.name}
-										</span>
-									</button>
-								))}
+											{/* SVG 아이콘 직접 렌더링 */}
+											{shape.key === SHAPES.CIRCLE && (
+												<svg
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+													fill="none"
+												>
+													<circle
+														cx="12"
+														cy="12"
+														r="10"
+														stroke={iconColor}
+														strokeWidth="2"
+														fill="none"
+													/>
+												</svg>
+											)}
+											{shape.key === SHAPES.TRIANGLE && (
+												<svg
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+													fill="none"
+												>
+													<path
+														d="M12 3l9 18H3l9-18z"
+														stroke={iconColor}
+														strokeWidth="2"
+														fill="none"
+													/>
+												</svg>
+											)}
+											{shape.key === SHAPES.SQUARE && (
+												<svg
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+													fill="none"
+												>
+													<rect
+														x="3"
+														y="3"
+														width="18"
+														height="18"
+														stroke={iconColor}
+														strokeWidth="2"
+														fill="none"
+													/>
+												</svg>
+											)}
+											{shape.key === SHAPES.STAR5 && (
+												<svg
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+													fill="none"
+												>
+													<path
+														d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
+														stroke={iconColor}
+														strokeWidth="2"
+														fill="none"
+													/>
+												</svg>
+											)}
+										</button>
+									);
+								})}
 							</div>
 						</div>
 
-						<div className="bg-[--color-toss-gray-50] rounded-[--radius-toss-lg] p-4">
+						<div className="bg-[--color-toss-gray-50] rounded-[--radius-toss-lg]">
 							{loading ? (
 								<div className="text-center py-8">
 									<div className="animate-spin w-8 h-8 border-2 border-[--color-toss-blue] border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -173,7 +238,7 @@ export default function RankingPage() {
 									</p>
 								</div>
 							) : (
-								<div className="space-y-2">
+								<div className="space-y-2 max-w-lg mx-auto md:max-w-none">
 									{/* 상위 10위 */}
 									{rankings.map((item) => {
 										const isCurrentUser = user && item.userId === user.id;
@@ -246,13 +311,17 @@ export default function RankingPage() {
 																{item.nickname}
 															</p>
 															{isCurrentUser && (
-																<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full flex-shrink-0">
-																	나
+																<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-blue-500 rounded-full flex-shrink-0">
+																	You
 																</span>
 															)}
 														</div>
 														<p className="text-xs text-[--color-toss-gray-500] mt-1">
-															{new Date(item.updatedAt).toISOString().split('T')[0]}
+															{
+																new Date(item.updatedAt)
+																	.toISOString()
+																	.split('T')[0]
+															}
 														</p>
 													</div>
 												</div>
@@ -277,7 +346,7 @@ export default function RankingPage() {
 											<div className="flex items-center my-4">
 												<div className="flex-1 h-px bg-[--color-toss-gray-300]"></div>
 												<span className="px-3 text-sm text-[--color-toss-gray-500]">
-													내 순위
+													Your Rank
 												</span>
 												<div className="flex-1 h-px bg-[--color-toss-gray-300]"></div>
 											</div>
@@ -292,12 +361,16 @@ export default function RankingPage() {
 															<p className="font-semibold text-sm md:text-base truncate text-[--color-toss-blue]">
 																{userInfo.nickname}
 															</p>
-															<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full flex-shrink-0">
-																나
+															<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-blue-500 rounded-full flex-shrink-0">
+																You
 															</span>
 														</div>
 														<p className="text-xs text-[--color-toss-gray-500] mt-1">
-															{new Date(userInfo.updatedAt).toISOString().split('T')[0]}
+															{
+																new Date(userInfo.updatedAt)
+																	.toISOString()
+																	.split('T')[0]
+															}
 														</p>
 													</div>
 												</div>

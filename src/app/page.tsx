@@ -24,28 +24,24 @@ export default function Home() {
 		{
 			key: SHAPES.CIRCLE,
 			name: 'Circle',
-			emoji: '⭕',
 			difficulty: 'Easy',
 			stars: '⭐',
 		},
 		{
 			key: SHAPES.TRIANGLE,
 			name: 'Triangle',
-			emoji: '🔺',
 			difficulty: 'Medium',
 			stars: '⭐⭐',
 		},
 		{
 			key: SHAPES.SQUARE,
 			name: 'Square',
-			emoji: '🟦',
 			difficulty: 'Hard',
 			stars: '⭐⭐⭐',
 		},
 		{
 			key: SHAPES.STAR5,
 			name: 'Star',
-			emoji: '⭐',
 			difficulty: 'Expert',
 			stars: '⭐⭐⭐⭐',
 		},
@@ -104,9 +100,9 @@ export default function Home() {
 			<div className="flex items-center justify-center p-4 pt-16 h-full overflow-y-auto">
 				<div className="max-w-md w-full">
 					<div className="text-center mb-2">
-						<p className="text-lg text-[--color-toss-gray-600] font-medium">
+						<h2 className="text-3xl text-[--color-toss-gray-600] font-medium">
 							Draw. Score. Master it.
-						</p>
+						</h2>
 					</div>
 
 					<div className="card-toss mb-22">
@@ -161,7 +157,74 @@ export default function Home() {
 													onClick={() => handleShapeSelect(shape.key)}
 													className="flex flex-col items-center p-4 rounded-[--radius-toss] border-2 border-[--color-toss-gray-200] hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light] hover:scale-105 transition-all duration-200 cursor-pointer"
 												>
-													<span className="text-3xl mb-2">{shape.emoji}</span>
+													{/* SVG 아이콘 */}
+													<div className="mb-3">
+														{shape.key === SHAPES.CIRCLE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<circle
+																	cx="12"
+																	cy="12"
+																	r="10"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.TRIANGLE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<path
+																	d="M12 3l9 18H3l9-18z"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.SQUARE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<rect
+																	x="3"
+																	y="3"
+																	width="18"
+																	height="18"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.STAR5 && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<path
+																	d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+													</div>
 													<span className="text-sm font-medium text-[--color-toss-gray-800] mb-1">
 														{shape.name}
 													</span>
@@ -221,7 +284,74 @@ export default function Home() {
 													onClick={() => handleShapeSelect(shape.key)}
 													className="flex flex-col items-center p-4 rounded-[--radius-toss] border-2 border-[--color-toss-gray-200] hover:border-[--color-toss-blue] hover:bg-[--color-toss-blue-light] hover:scale-105 transition-all duration-200 cursor-pointer"
 												>
-													<span className="text-3xl mb-2">{shape.emoji}</span>
+													{/* SVG 아이콘 */}
+													<div className="mb-3">
+														{shape.key === SHAPES.CIRCLE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<circle
+																	cx="12"
+																	cy="12"
+																	r="10"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.TRIANGLE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<path
+																	d="M12 3l9 18H3l9-18z"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.SQUARE && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<rect
+																	x="3"
+																	y="3"
+																	width="18"
+																	height="18"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+														{shape.key === SHAPES.STAR5 && (
+															<svg
+																width="32"
+																height="32"
+																viewBox="0 0 24 24"
+																fill="none"
+															>
+																<path
+																	d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
+																	stroke="black"
+																	strokeWidth="2"
+																	fill="none"
+																/>
+															</svg>
+														)}
+													</div>
 													<span className="text-sm font-medium text-[--color-toss-gray-800] mb-1">
 														{shape.name}
 													</span>

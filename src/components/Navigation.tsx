@@ -17,6 +17,8 @@ export default function Navigation({
 	onSignInRedirect,
 }: NavigationProps) {
 	const [showDropdown, setShowDropdown] = useState(false);
+	const [showMobileMenu, setShowMobileMenu] = useState(false);
+	
 	return (
 		<nav className="bg-white shadow-sm border-b border-[--color-toss-gray-200] sticky top-0 z-50">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,10 +32,8 @@ export default function Navigation({
 						</Link>
 					</div>
 
-					<div className="flex-1"></div>
-
-					{/* 사용자 메뉴 */}
-					<div className="flex items-center">
+					{/* 데스크톱 메뉴 */}
+					<div className="hidden md:flex items-center">
 						{user ? (
 							<div className="flex items-center">
 								<a
@@ -90,7 +90,72 @@ export default function Navigation({
 							</div>
 						)}
 					</div>
+
+					{/* 모바일 햄버거 버튼 */}
+					<div className="md:hidden">
+						<button
+							onClick={() => setShowMobileMenu(!showMobileMenu)}
+							className="p-2 rounded-[--radius-toss] text-[--color-toss-gray-600] hover:text-[--color-toss-blue] hover:bg-[--color-toss-gray-50] transition-colors"
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								{showMobileMenu ? (
+									<path d="M18 6L6 18M6 6l12 12" />
+								) : (
+									<>
+										<line x1="4" y1="6" x2="20" y2="6" />
+										<line x1="4" y1="12" x2="20" y2="12" />
+										<line x1="4" y1="18" x2="20" y2="18" />
+									</>
+								)}
+							</svg>
+						</button>
+					</div>
 				</div>
+				
+				{/* 모바일 메뉴 드롭다운 */}
+				{showMobileMenu && (
+					<div className="md:hidden border-t border-[--color-toss-gray-200] bg-white">
+						<div className="px-4 py-2 space-y-1">
+							<a
+								href="/ranking"
+								className="block px-3 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] hover:bg-[--color-toss-gray-50] rounded-[--radius-toss] transition-colors"
+								onClick={() => setShowMobileMenu(false)}
+							>
+								Rankings
+							</a>
+							{user ? (
+								<>
+									<div className="px-3 py-2 text-sm text-[--color-toss-gray-800] font-medium border-t border-[--color-toss-gray-200] mt-2 pt-3">
+										{user.nickname}
+									</div>
+									<button
+										onClick={() => {
+											onSignOut();
+											setShowMobileMenu(false);
+										}}
+										className="block w-full text-left px-3 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] hover:bg-[--color-toss-gray-50] rounded-[--radius-toss] transition-colors"
+									>
+										Logout
+									</button>
+								</>
+							) : (
+								<button
+									onClick={() => {
+										if (onSignInRedirect) {
+											onSignInRedirect();
+										} else {
+											onSignIn();
+										}
+										setShowMobileMenu(false);
+									}}
+									className="block w-full text-left px-3 py-2 text-sm text-[--color-toss-blue] hover:bg-[--color-toss-blue-light] rounded-[--radius-toss] font-medium transition-colors"
+								>
+									Login
+								</button>
+							)}
+						</div>
+					</div>
+				)}
 			</div>
 		</nav>
 	);
