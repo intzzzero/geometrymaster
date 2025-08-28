@@ -8,14 +8,23 @@ import Navigation from '@/components/Navigation'
 
 interface RankingItem {
   rank: number
+  userId: string
   nickname: string
   score: number
   updatedAt: string
 }
 
+interface RankingResponse {
+  ranking: RankingItem[]
+  userRank: number | null
+  userInfo: RankingItem | null
+}
+
 export default function RankingPage() {
   const [selectedShape, setSelectedShape] = useState<typeof SHAPES[keyof typeof SHAPES]>(SHAPES.CIRCLE)
   const [rankings, setRankings] = useState<RankingItem[]>([])
+  const [userInfo, setUserInfo] = useState<RankingItem | null>(null)
+  const [userRank, setUserRank] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user, signInWithGoogle, signInWithGoogleRedirect, signOut } = useAuth()
@@ -42,25 +51,35 @@ export default function RankingPage() {
       setError(null)
       
       try {
-        const response = await fetch(`/api/ranking?shape=${selectedShape}`)
+        const url = new URL('/api/ranking', window.location.origin)
+        url.searchParams.set('shape', selectedShape)
+        if (user?.id) {
+          url.searchParams.set('userId', user.id)
+        }
+        
+        const response = await fetch(url.toString())
         
         if (!response.ok) {
           throw new Error('Failed to fetch rankings')
         }
         
-        const data = await response.json()
+        const data: RankingResponse = await response.json()
         setRankings(data.ranking || [])
+        setUserInfo(data.userInfo)
+        setUserRank(data.userRank)
       } catch (err) {
         console.error('Failed to fetch rankings:', err)
         setError('Failed to load rankings')
         setRankings([])
+        setUserInfo(null)
+        setUserRank(null)
       } finally {
         setLoading(false)
       }
     }
 
     fetchRankings()
-  }, [selectedShape])
+  }, [selectedShape, user?.id])
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -143,35 +162,89 @@ export default function RankingPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {rankings.map((item) => (
-                    <div
-                      key={item.rank}
-                      className={`flex items-center justify-between p-4 rounded-[--radius-toss] ${
-                        item.rank <= 3 
-                          ? 'bg-white border-2 border-[--color-toss-blue-light]' 
-                          : 'bg-white border border-[--color-toss-gray-200]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="text-lg font-bold min-w-[60px]">
-                          {getRankIcon(item.rank)}
+                  {/* 상위 5위 */}
+                  {rankings.map((item) => {
+                    const isCurrentUser = user && item.userId === user.id
+                    return (
+                      <div
+                        key={item.rank}
+                        className={`flex items-center justify-between p-4 rounded-[--radius-toss] ${
+                          isCurrentUser
+                            ? 'bg-white border-2 border-[--color-toss-blue] ring-2 ring-[--color-toss-blue]/20' 
+                            : item.rank <= 3 
+                              ? 'bg-white border-2 border-[--color-toss-blue-light]' 
+                              : 'bg-white border border-[--color-toss-gray-200]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="text-lg font-bold min-w-[60px]">
+                            {getRankIcon(item.rank)}
+                          </div>
+                          <div>
+                            <p className={`font-semibold ${
+                              isCurrentUser 
+                                ? 'text-[--color-toss-blue]' 
+                                : 'text-[--color-toss-gray-900]'
+                            }`}>
+                              {item.nickname}
+                              {isCurrentUser && (
+                                <span className="ml-2 text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full">
+                                  나
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-[--color-toss-gray-500]">
+                              {item.updatedAt}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-[--color-toss-gray-900]">
-                            {item.nickname}
-                          </p>
-                          <p className="text-xs text-[--color-toss-gray-500]">
-                            {item.updatedAt}
+                        <div className="text-right">
+                          <p className={`text-xl font-bold ${
+                            isCurrentUser 
+                              ? 'text-[--color-toss-blue]' 
+                              : 'text-[--color-toss-blue]'
+                          }`}>
+                            {item.score} pts
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-[--color-toss-blue]">
-                          {item.score} pts
-                        </p>
+                    )
+                  })}
+                  
+                  {/* 순위권 밖 사용자 정보 */}
+                  {userInfo && userRank && userRank > 5 && (
+                    <>
+                      <div className="flex items-center my-4">
+                        <div className="flex-1 h-px bg-[--color-toss-gray-300]"></div>
+                        <span className="px-3 text-sm text-[--color-toss-gray-500]">내 순위</span>
+                        <div className="flex-1 h-px bg-[--color-toss-gray-300]"></div>
                       </div>
-                    </div>
-                  ))}
+                      
+                      <div className="flex items-center justify-between p-4 rounded-[--radius-toss] bg-white border-2 border-[--color-toss-blue] ring-2 ring-[--color-toss-blue]/20">
+                        <div className="flex items-center gap-4">
+                          <div className="text-lg font-bold min-w-[60px] text-[--color-toss-blue]">
+                            #{userInfo.rank}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[--color-toss-blue]">
+                              {userInfo.nickname}
+                              <span className="ml-2 text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full">
+                                나
+                              </span>
+                            </p>
+                            <p className="text-xs text-[--color-toss-gray-500]">
+                              {userInfo.updatedAt}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-[--color-toss-blue]">
+                            {userInfo.score} pts
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
