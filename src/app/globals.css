@@ -106,4 +106,42 @@
     border: 2px solid var(--color-bronze-border);
     box-shadow: 0 8px 20px rgba(234, 88, 12, 0.12), 0 0 0 2px rgba(234, 88, 12, 0.2);
   }
+
+  /* GeometryMaster 무지개 애니메이션 */
+  .rainbow-border {
+    position: relative;
+    background: linear-gradient(to bottom right, var(--color-gold-light), #fcd34d);
+    border: 3px solid;
+    border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) 1;
+    animation: rainbow-border-flow 2s linear infinite;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 
+                0 10px 25px rgba(245, 158, 11, 0.15);
+  }
+
+  @keyframes rainbow-border-flow {
+    0% {
+      border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) 1;
+    }
+    14.28% {
+      border-image: linear-gradient(45deg, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000) 1;
+    }
+    28.57% {
+      border-image: linear-gradient(45deg, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00) 1;
+    }
+    42.85% {
+      border-image: linear-gradient(45deg, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00) 1;
+    }
+    57.14% {
+      border-image: linear-gradient(45deg, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00) 1;
+    }
+    71.42% {
+      border-image: linear-gradient(45deg, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff) 1;
+    }
+    85.71% {
+      border-image: linear-gradient(45deg, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082) 1;
+    }
+    100% {
+      border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3) 1;
+    }
+  }
 }

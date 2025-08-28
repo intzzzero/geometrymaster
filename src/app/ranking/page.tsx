@@ -85,16 +85,7 @@ export default function RankingPage() {
 	}, [selectedShape, user?.id]);
 
 	const getRankIcon = (rank: number) => {
-		switch (rank) {
-			case 1:
-				return '🥇';
-			case 2:
-				return '🥈';
-			case 3:
-				return '🥉';
-			default:
-				return `#${rank}`;
-		}
+		return `#${rank}`;
 	};
 
 	return (
@@ -250,14 +241,8 @@ export default function RankingPage() {
 										let inlineStyle = {};
 
 										if (item.rank === 1) {
-											borderStyle = 'border-2 border-solid';
-											inlineStyle = {
-												background:
-													'linear-gradient(to bottom right, #fef3c7, #fcd34d)',
-												borderColor: '#f59e0b',
-												boxShadow:
-													'0 10px 25px rgba(245, 158, 11, 0.15), 0 0 0 2px rgba(245, 158, 11, 0.3)',
-											};
+											borderStyle = 'rainbow-border';
+											inlineStyle = {};
 										} else if (item.rank === 2) {
 											borderStyle = 'border-2 border-solid';
 											inlineStyle = {
@@ -296,9 +281,6 @@ export default function RankingPage() {
 												style={inlineStyle}
 											>
 												<div className="flex items-center gap-3">
-													<div className="text-base md:text-lg font-bold min-w-[40px] md:min-w-[50px] flex-shrink-0">
-														{getRankIcon(item.rank)}
-													</div>
 													<div className="flex-1 min-w-0">
 														<div className="flex items-center gap-2 flex-wrap">
 															<p
@@ -308,11 +290,14 @@ export default function RankingPage() {
 																		: 'text-[--color-toss-gray-900]'
 																}`}
 															>
-																{item.nickname}
+																{getRankIcon(item.rank)} {item.nickname}
 															</p>
-															{isCurrentUser && (
-																<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-blue-500 rounded-full flex-shrink-0">
-																	You
+															{item.rank === 1 && (
+																<span
+																	className="text-xs px-2 py-1 text-white rounded-md flex-shrink-0 font-bold shadow-sm"
+																	style={{ backgroundColor: '#F5119E' }}
+																>
+																	👑 GeometryMaster
 																</span>
 															)}
 														</div>
@@ -361,7 +346,15 @@ export default function RankingPage() {
 															<p className="font-semibold text-sm md:text-base truncate text-[--color-toss-blue]">
 																{userInfo.nickname}
 															</p>
-															<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-blue-500 rounded-full flex-shrink-0">
+															{userInfo.rank === 1 && (
+																<span
+																	className="text-xs px-2 py-1 text-white rounded-full flex-shrink-0 font-bold shadow-sm"
+																	style={{ backgroundColor: '#F5119E' }}
+																>
+																	👑 GeometryMaster
+																</span>
+															)}
+															<span className="text-xs px-2 py-1 bg-[--color-toss-blue] text-white rounded-full flex-shrink-0">
 																You
 															</span>
 														</div>
