@@ -14,7 +14,6 @@ function AuthCallbackContent() {
       const code = searchParams.get('code')
       const error = searchParams.get('error')
 
-      console.log('Auth callback - code:', code, 'error:', error)
 
       if (error) {
         console.error('OAuth error:', error)
@@ -38,7 +37,6 @@ function AuthCallbackContent() {
 
       if (code) {
         try {
-          console.log('Processing auth code:', code)
           
           const response = await fetch('/api/auth/google', {
             method: 'POST',
@@ -46,7 +44,6 @@ function AuthCallbackContent() {
             body: JSON.stringify({ code })
           })
 
-          console.log('Auth API response status:', response.status)
 
           if (!response.ok) {
             const errorData = await response.json()
@@ -54,7 +51,6 @@ function AuthCallbackContent() {
           }
 
           const { user } = await response.json()
-          console.log('Auth success, user:', user)
 
           const userWithFlag = {
             ...user,

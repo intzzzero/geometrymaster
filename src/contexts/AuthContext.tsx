@@ -35,7 +35,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser)
-        console.log('Restored user from localStorage:', parsedUser)
         setUser(parsedUser)
       } catch (error) {
         console.error('Failed to parse saved user:', error)
@@ -49,7 +48,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event.origin !== window.location.origin) return
 
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS' && event.data.user) {
-        console.log('Received auth success message with user:', event.data.user)
         const userWithFlag = {
           ...event.data.user,
           needsNickname: !event.data.user.nickname || 
@@ -86,8 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         `access_type=offline&` +
         `prompt=select_account`
 
-      console.log('Google Auth URL:', googleAuthUrl)
-      console.log('Redirect URI:', redirectUri)
 
       // 팝업으로 Google 인증 페이지 열기
       const popup = window.open(
@@ -177,7 +173,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       `access_type=offline&` +
       `prompt=select_account`
 
-    console.log('Redirecting to:', googleAuthUrl)
     window.location.href = googleAuthUrl
   }
 

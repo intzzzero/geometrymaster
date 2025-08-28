@@ -104,7 +104,6 @@ export default function GamePage() {
 
 					if (response.ok) {
 						const data = await response.json();
-						console.log('Score submission response:', data);
 						setScoreSubmissionResult({
 							isNewRecord: data.isNewRecord,
 							previousBest: data.previousBest
