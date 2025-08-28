@@ -89,7 +89,7 @@ export default function Home() {
 	}
 
 	return (
-		<div className="h-screen overflow-hidden bg-[--color-toss-gray-50]">
+		<div className="min-h-screen overflow-auto bg-[--color-toss-gray-50]">
 			<Navigation
 				user={user}
 				onSignIn={signInWithGoogle}
@@ -97,10 +97,10 @@ export default function Home() {
 				onSignOut={signOut}
 			/>
 
-			<div className="flex items-center justify-center p-4 pt-16 h-full overflow-y-auto">
+			<div className="flex items-center justify-center p-4 pt-10 min-h-[calc(100vh-64px)]">
 				<div className="max-w-md w-full">
-					<div className="text-center mb-2">
-						<h2 className="text-3xl text-[--color-toss-gray-600] font-medium">
+					<div className="text-center">
+						<h2 className="text-2xl text-[--color-toss-gray-600] font-medium">
 							Draw. Score. Master it.
 						</h2>
 					</div>
@@ -109,9 +109,6 @@ export default function Home() {
 						{!user ? (
 							<div className="text-center">
 								<div className="mb-6">
-									<p className="text-[--color-toss-gray-800] text-lg font-medium mb-2">
-										Test your shape drawing skills
-									</p>
 									<p className="text-[--color-toss-gray-600]">
 										Get scores based on accuracy and challenge the rankings!
 									</p>
