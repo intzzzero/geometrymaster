@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SHAPES } from '@/lib/supabase-client'
+import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
-
-// 임시 mock 사용자 (추후 실제 구현)
-const mockUser = { id: '1', nickname: 'TestUser', needsNickname: false }
 
 interface RankingItem {
   rank: number
@@ -19,7 +17,8 @@ export default function RankingPage() {
   const [selectedShape, setSelectedShape] = useState<typeof SHAPES[keyof typeof SHAPES]>(SHAPES.CIRCLE)
   const [rankings, setRankings] = useState<RankingItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<typeof mockUser | null>(mockUser) // 임시 mock
+  const [error, setError] = useState<string | null>(null)
+  const { user, signInWithGoogle, signInWithGoogleRedirect, signOut } = useAuth()
   const router = useRouter()
 
   const shapes = [
@@ -29,40 +28,39 @@ export default function RankingPage() {
     { key: SHAPES.TRIANGLE, name: 'Triangle', emoji: '🔺' }
   ]
 
-  const signInWithGoogle = () => {
-    setUser(mockUser)
-  }
-
-  const signOut = () => {
-    setUser(null)
-  }
-
-  // 임시 mock 데이터를 useMemo로 메모이제이션
-  const mockRankings: RankingItem[] = useMemo(() => [
-    { rank: 1, nickname: 'MasterShape', score: 98, updatedAt: '2024-01-15' },
-    { rank: 2, nickname: 'CirclePro', score: 95, updatedAt: '2024-01-14' },
-    { rank: 3, nickname: 'GeometryKing', score: 92, updatedAt: '2024-01-13' },
-    { rank: 4, nickname: 'TestUser', score: 88, updatedAt: '2024-01-12' },
-    { rank: 5, nickname: 'DrawingAce', score: 85, updatedAt: '2024-01-11' },
-  ], [])
+  // 랭킹 페이지에서는 스크롤 허용
+  useEffect(() => {
+    document.body.classList.add('allow-scroll')
+    return () => {
+      document.body.classList.remove('allow-scroll')
+    }
+  }, [])
 
   useEffect(() => {
-    // 실제로는 API 호출
     const fetchRankings = async () => {
       setLoading(true)
-      // const response = await fetch(`/api/ranking?shape=${selectedShape}`)
-      // const data = await response.json()
-      // setRankings(data.ranking)
+      setError(null)
       
-      // 임시 mock 데이터 사용
-      setTimeout(() => {
-        setRankings(mockRankings)
+      try {
+        const response = await fetch(`/api/ranking?shape=${selectedShape}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch rankings')
+        }
+        
+        const data = await response.json()
+        setRankings(data.ranking || [])
+      } catch (err) {
+        console.error('Failed to fetch rankings:', err)
+        setError('Failed to load rankings')
+        setRankings([])
+      } finally {
         setLoading(false)
-      }, 500)
+      }
     }
 
     fetchRankings()
-  }, [selectedShape, mockRankings])
+  }, [selectedShape])
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -75,7 +73,12 @@ export default function RankingPage() {
 
   return (
     <div className="min-h-screen bg-[--color-toss-gray-50]">
-      <Navigation user={user} onSignIn={signInWithGoogle} onSignOut={signOut} />
+      <Navigation 
+        user={user} 
+        onSignIn={signInWithGoogle} 
+        onSignInRedirect={signInWithGoogleRedirect}
+        onSignOut={signOut} 
+      />
       
       <div className="flex items-center justify-center p-4 pt-16">
         <div className="max-w-2xl w-full">
@@ -120,6 +123,16 @@ export default function RankingPage() {
                 <div className="text-center py-8">
                   <div className="animate-spin w-8 h-8 border-2 border-[--color-toss-blue] border-t-transparent rounded-full mx-auto mb-4"></div>
                   <p className="text-[--color-toss-gray-600]">Loading rankings...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <p className="text-red-600 mb-2">⚠️ {error}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="btn-secondary text-sm"
+                  >
+                    Retry
+                  </button>
                 </div>
               ) : rankings.length === 0 ? (
                 <div className="text-center py-8">

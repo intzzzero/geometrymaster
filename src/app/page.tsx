@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SHAPES } from '@/lib/supabase-client'
+import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
-
-// Temporary mock authentication (will be implemented later)
-const mockUser = { id: '1', nickname: 'TestUser', needsNickname: false }
+import NicknameModal from '@/components/NicknameModal'
 
 export default function Home() {
-  const [user, setUser] = useState<typeof mockUser | null>(mockUser) // Temporary mock
+  const { user, isLoading, signInWithGoogle, signInWithGoogleRedirect, signOut, updateNickname } = useAuth()
   const [showShapeSelector, setShowShapeSelector] = useState(false)
+  const [showNicknameModal, setShowNicknameModal] = useState(false)
   const router = useRouter()
 
   const shapes = [
@@ -28,20 +28,49 @@ export default function Home() {
     router.push(`/game/${shape}`)
   }
 
-  const signInWithGoogle = () => {
-    // Temporary - will implement actual Google OAuth later
-    setUser(mockUser)
+  const handleNicknameSave = async (nickname: string) => {
+    try {
+      await updateNickname(nickname)
+      setShowNicknameModal(false)
+    } catch (error) {
+      console.error('닉네임 업데이트 실패:', error)
+      throw error // NicknameModal에서 에러 처리
+    }
   }
 
-  const signOut = () => {
-    setUser(null)
+  const handleNicknameCancel = () => {
+    setShowNicknameModal(false)
+  }
+
+  // 사용자가 로그인했고 닉네임이 필요한 경우 모달 표시
+  React.useEffect(() => {
+    if (user && user.needsNickname && !showNicknameModal) {
+      setShowNicknameModal(true)
+    }
+  }, [user, showNicknameModal])
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[--color-toss-gray-50] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-[--color-toss-blue] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[--color-toss-gray-600]">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-[--color-toss-gray-50]">
-      <Navigation user={user} onSignIn={signInWithGoogle} onSignOut={signOut} />
+    <div className="h-screen overflow-hidden bg-[--color-toss-gray-50]">
+      <Navigation 
+        user={user} 
+        onSignIn={signInWithGoogle} 
+        onSignInRedirect={signInWithGoogleRedirect}
+        onSignOut={signOut} 
+      />
       
-      <div className="flex items-center justify-center p-4 pt-16">
+      <div className="flex items-center justify-center p-4 pt-16 h-full overflow-y-auto">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-[--color-toss-gray-900] mb-3">
@@ -184,6 +213,14 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* 닉네임 설정 모달 */}
+      <NicknameModal
+        isOpen={showNicknameModal}
+        currentNickname={user?.nickname || ''}
+        onSave={handleNicknameSave}
+        onCancel={handleNicknameCancel}
+      />
     </div>
   )
 }

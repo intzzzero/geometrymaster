@@ -32,10 +32,31 @@
     font-family: var(--font-family-toss);
   }
   
-  body {
+  html, body {
     margin: 0;
+    height: 100%;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 랭킹 페이지에서는 스크롤 허용 */
+  body.allow-scroll {
+    overflow: auto;
+  }
+
+  /* 터치 스크롤 방지 */
+  body {
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    width: 100%;
+  }
+
+  /* 랭킹 페이지에서는 일반 스크롤 */
+  body.allow-scroll {
+    position: static;
+    touch-action: auto;
   }
 }
 

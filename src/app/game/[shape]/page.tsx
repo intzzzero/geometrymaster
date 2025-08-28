@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { SHAPES } from '@/lib/supabase-client';
+import { useAuth } from '@/contexts/AuthContext';
 import DrawingCanvas, { type Point } from '@/components/DrawingCanvas';
 import Navigation from '@/components/Navigation';
 import {
@@ -13,30 +14,23 @@ import {
 	type ScoringResult,
 } from '@/lib/scoring-algorithms';
 
-// Temporary mock authentication (will be implemented later)
-const mockUser = { id: '1', nickname: 'TestUser', needsNickname: false };
+interface ScoreSubmissionResult {
+	isNewRecord: boolean;
+	previousBest: number;
+}
 
 export default function GamePage() {
 	const params = useParams();
 	const router = useRouter();
 	const shape = params?.shape as string;
-	const [user, setUser] = useState<typeof mockUser | null>(mockUser); // Temporary mock
+	const { user, signInWithGoogle, signInWithGoogleRedirect, signOut } = useAuth();
 	const [, setDrawingData] = useState<Point[]>([]);
 	const [, setHasDrawing] = useState(false);
 	const [scoringResult, setScoringResult] = useState<ScoringResult | null>(
 		null
 	);
 	const [isScoring, setIsScoring] = useState(false);
-
-	// Authentication handlers
-	const signInWithGoogle = () => {
-		// Temporary - will implement actual Google OAuth later
-		setUser(mockUser);
-	};
-
-	const signOut = () => {
-		setUser(null);
-	};
+	const [scoreSubmissionResult, setScoreSubmissionResult] = useState<ScoreSubmissionResult | null>(null);
 
 	const shapeNames = {
 		[SHAPES.CIRCLE]: 'Circle',
@@ -95,9 +89,33 @@ export default function GamePage() {
 
 			setScoringResult(result);
 
-			// TODO: 로그인된 사용자의 경우 점수를 서버에 저장
+			// 로그인된 사용자의 경우 점수를 서버에 저장
 			if (user) {
-				console.log('TODO: Save score to server', result.score);
+				try {
+					const response = await fetch('/api/scores/submit', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							userId: user.id,
+							shape,
+							score: result.score
+						})
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+						console.log('Score submission response:', data);
+						setScoreSubmissionResult({
+							isNewRecord: data.isNewRecord,
+							previousBest: data.previousBest
+						});
+					} else {
+						const errorData = await response.json();
+						console.error('Score submission failed:', errorData);
+					}
+				} catch (error) {
+					console.error('Failed to save score:', error);
+				}
 			}
 		} catch (error) {
 			console.error('Auto scoring error:', error);
@@ -131,10 +149,18 @@ export default function GamePage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-[--color-toss-gray-50]">
-			<Navigation user={user} onSignIn={signInWithGoogle} onSignOut={signOut} />
+		<div className="h-screen overflow-hidden bg-[--color-toss-gray-50]">
+			<Navigation 
+				user={user} 
+				onSignIn={signInWithGoogle} 
+				onSignInRedirect={signInWithGoogleRedirect}
+				onSignOut={signOut} 
+			/>
 			
-			<div className="min-h-screen bg-white relative">
+			<div 
+				className="h-screen bg-white relative overflow-hidden"
+				style={{ touchAction: 'none' }}
+			>
 			{/* Top header - minimized UI */}
 			<div className="absolute top-0 left-0 right-0 z-20 p-4">
 				<div className="flex items-center justify-between">
@@ -183,12 +209,23 @@ export default function GamePage() {
 					<div className="bg-white rounded-[--radius-toss-xl] p-8 max-w-md w-full mx-4 shadow-2xl">
 						<div className="text-center">
 							<div className="mb-6">
+								{user && scoreSubmissionResult?.isNewRecord && (
+									<div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-[--radius-toss] text-green-700">
+										<p className="text-sm font-bold">🎉 New Record!</p>
+										<p className="text-xs">Previous Best: {scoreSubmissionResult.previousBest} pts</p>
+									</div>
+								)}
 								<div className="text-6xl font-bold text-[--color-toss-blue] mb-3">
 									{scoringResult.score} pts
 								</div>
 								<p className="text-xl font-medium text-[--color-toss-gray-800] mb-4">
 									{scoringResult.feedback}
 								</p>
+								{user && scoreSubmissionResult && !scoreSubmissionResult.isNewRecord && (
+									<p className="text-sm text-[--color-toss-gray-600] mb-2">
+										Best Score: {scoreSubmissionResult.previousBest} pts
+									</p>
+								)}
 							</div>
 
 							{/* Detailed scores */}

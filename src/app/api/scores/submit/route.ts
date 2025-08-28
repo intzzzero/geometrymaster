@@ -28,12 +28,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 기존 최고 점수 확인
-    const { data: existingScore } = await supabaseServer
+    const { data: existingScore, error: fetchError } = await supabaseServer
       .from('scores')
       .select('high_score')
       .eq('user_id', userId)
       .eq('shape', shape)
-      .single()
+      .maybeSingle()
+
+    if (fetchError) {
+      console.error('Error fetching existing score:', fetchError)
+      return NextResponse.json(
+        { error: 'Failed to fetch existing score' },
+        { status: 500 }
+      )
+    }
 
     const isNewRecord = !existingScore || score > existingScore.high_score
 
@@ -46,11 +54,14 @@ export async function POST(request: NextRequest) {
           shape,
           high_score: score,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,shape'
         })
         .select()
         .single()
 
       if (error) {
+        console.error('Error saving score:', error)
         return NextResponse.json(
           { error: 'Failed to save score' },
           { status: 500 }

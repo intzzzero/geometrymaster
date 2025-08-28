@@ -7,9 +7,10 @@ interface NavigationProps {
   user: { id: string; nickname: string; needsNickname: boolean } | null
   onSignIn: () => void
   onSignOut: () => void
+  onSignInRedirect?: () => void
 }
 
-export default function Navigation({ user, onSignIn, onSignOut }: NavigationProps) {
+export default function Navigation({ user, onSignIn, onSignOut, onSignInRedirect }: NavigationProps) {
   const [showDropdown, setShowDropdown] = useState(false)
   return (
     <nav className="bg-white shadow-sm border-b border-[--color-toss-gray-200] sticky top-0 z-50">
@@ -64,12 +65,24 @@ export default function Navigation({ user, onSignIn, onSignOut }: NavigationProp
                 >
                   Rankings
                 </a>
-                <button
-                  onClick={onSignIn}
-                  className="btn-primary text-sm px-4 py-2 ml-4 !text-black hover:!text-black"
-                >
-                  Login
-                </button>
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={onSignIn}
+                    className="btn-secondary text-sm px-3 py-2 !text-black hover:!text-black"
+                    title="팝업 로그인"
+                  >
+                    Login (Popup)
+                  </button>
+                  {onSignInRedirect && (
+                    <button
+                      onClick={onSignInRedirect}
+                      className="btn-primary text-sm px-3 py-2 !text-black hover:!text-black"
+                      title="리디렉션 로그인"
+                    >
+                      Login (Redirect)
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

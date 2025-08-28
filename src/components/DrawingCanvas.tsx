@@ -166,23 +166,29 @@ export default function DrawingCanvas({
     endDrawing()
   }, [endDrawing])
 
-  // 터치 이벤트 핸들러
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
+  // 터치 이벤트 핸들러 (네이티브 이벤트 리스너용)
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (e.cancelable) {
+      e.preventDefault()
+    }
     const touch = e.touches[0]
     const point = getCanvasPoint(touch.clientX, touch.clientY)
     startDrawing(point)
   }, [getCanvasPoint, startDrawing])
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (e.cancelable) {
+      e.preventDefault()
+    }
     const touch = e.touches[0]
     const point = getCanvasPoint(touch.clientX, touch.clientY)
     continueDrawing(point)
   }, [getCanvasPoint, continueDrawing])
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (e.cancelable) {
+      e.preventDefault()
+    }
     endDrawing()
   }, [endDrawing])
 
@@ -202,6 +208,21 @@ export default function DrawingCanvas({
     setLastCompletedPathLength(0)
   }, [backgroundColor])
 
+  // 네이티브 터치 이벤트 리스너 추가 (passive: false로 preventDefault 허용)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false })
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false })
+
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart)
+      canvas.removeEventListener('touchmove', handleTouchMove)
+      canvas.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd])
 
   const actualWidth = fullScreen ? canvasSize.width : width
   const actualHeight = fullScreen ? canvasSize.height : height
@@ -217,14 +238,18 @@ export default function DrawingCanvas({
         } bg-white ${
           disabled ? 'cursor-not-allowed opacity-50' : 'cursor-crosshair'
         }`}
-        style={{ width: actualWidth, height: actualHeight }}
+        style={{ 
+          width: actualWidth, 
+          height: actualHeight,
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          msUserSelect: 'none'
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       />
       
       {/* 컨트롤 버튼들 - fullScreen 모드에서는 숨김 */}
