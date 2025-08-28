@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { SHAPES } from '@/lib/supabase-client'
 import Navigation from '@/components/Navigation'
@@ -37,14 +37,14 @@ export default function RankingPage() {
     setUser(null)
   }
 
-  // 임시 mock 데이터
-  const mockRankings: RankingItem[] = [
+  // 임시 mock 데이터를 useMemo로 메모이제이션
+  const mockRankings: RankingItem[] = useMemo(() => [
     { rank: 1, nickname: 'MasterShape', score: 98, updatedAt: '2024-01-15' },
     { rank: 2, nickname: 'CirclePro', score: 95, updatedAt: '2024-01-14' },
     { rank: 3, nickname: 'GeometryKing', score: 92, updatedAt: '2024-01-13' },
     { rank: 4, nickname: 'TestUser', score: 88, updatedAt: '2024-01-12' },
     { rank: 5, nickname: 'DrawingAce', score: 85, updatedAt: '2024-01-11' },
-  ]
+  ], [])
 
   useEffect(() => {
     // 실제로는 API 호출
@@ -62,7 +62,7 @@ export default function RankingPage() {
     }
 
     fetchRankings()
-  }, [selectedShape])
+  }, [selectedShape, mockRankings])
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

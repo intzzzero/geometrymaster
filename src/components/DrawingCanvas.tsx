@@ -77,7 +77,7 @@ export default function DrawingCanvas({
     // 배경 초기화
     ctx.fillStyle = backgroundColor
     ctx.fillRect(0, 0, rect.width, rect.height)
-  }, [fullScreen ? canvasSize.width : width, fullScreen ? canvasSize.height : height, strokeColor, strokeWidth, backgroundColor, fullScreen])
+  }, [width, height, strokeColor, strokeWidth, backgroundColor, fullScreen, canvasSize.width, canvasSize.height])
 
   // onDrawingChange 콜백 처리
   useEffect(() => {
@@ -202,10 +202,6 @@ export default function DrawingCanvas({
     setLastCompletedPathLength(0)
   }, [backgroundColor])
 
-  // 전체 경로 데이터 반환
-  const getDrawingData = useCallback(() => {
-    return allPaths
-  }, [allPaths])
 
   const actualWidth = fullScreen ? canvasSize.width : width
   const actualHeight = fullScreen ? canvasSize.height : height
