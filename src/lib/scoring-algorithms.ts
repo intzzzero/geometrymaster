@@ -1,8 +1,9 @@
 import { Point } from '@/components/DrawingCanvas'
+import { findStarPeaks, calculateStarAngleConsistency, calculateStarSymmetry } from './star-helper-functions'
 
 // 도형별 채점 결과 인터페이스
 export interface ScoringResult {
-  score: number // 0-100점
+  score: number // 0.000-100.000점 (소수점 3자리)
   feedback: string
   details: {
     accuracy: number
@@ -29,7 +30,7 @@ function getCenterPoint(points: Point[]): Point {
   }
 }
 
-// 원주율 기반 원형도 계산
+// 원주율 기반 정밀 원형도 계산
 function calculateCircularity(points: Point[]): number {
   if (points.length < 15) return 0
   
@@ -37,16 +38,16 @@ function calculateCircularity(points: Point[]): number {
   const radii = points.map(point => distance(point, center))
   const avgRadius = radii.reduce((sum, r) => sum + r, 0) / radii.length
   
-  // 반지름 변동성 계산
+  // 반지름 일관성 계산 (더 정밀하게)
   const radiusVariance = radii.reduce((sum, r) => sum + (r - avgRadius) ** 2, 0) / radii.length
-  const radiusConsistency = Math.max(0, 1 - Math.sqrt(radiusVariance) / avgRadius)
+  const radiusStdDev = Math.sqrt(radiusVariance)
+  const radiusConsistency = Math.max(0, 1 - (radiusStdDev / avgRadius) * 0.8) // 매우 완화된 반지름 일관성 평가
   
   // 둘레 계산 (연속된 점들 사이의 거리의 합)
   let perimeter = 0
   for (let i = 0; i < points.length - 1; i++) {
     perimeter += distance(points[i], points[i + 1])
   }
-  // 마지막 점과 첫 번째 점 사이의 거리도 추가
   if (points.length > 2) {
     perimeter += distance(points[points.length - 1], points[0])
   }
@@ -54,16 +55,19 @@ function calculateCircularity(points: Point[]): number {
   // 이론적 원의 둘레 (2πr)
   const theoreticalCircumference = 2 * Math.PI * avgRadius
   
-  // 실제 둘레와 이론적 둘레의 차이
-  const circumferenceRatio = Math.min(perimeter, theoreticalCircumference) / Math.max(perimeter, theoreticalCircumference)
-  
-  // 원주율 정확도 (실제 둘레 / 지름이 π에 얼마나 가까운지)
+  // 원주율 정확도 (핵심 지표) - 매우 정밀하게 측정
   const diameter = avgRadius * 2
   const actualPi = perimeter / diameter
-  const piAccuracy = Math.max(0, 1 - Math.abs(actualPi - Math.PI) / Math.PI)
+  const piError = Math.abs(actualPi - Math.PI) / Math.PI
   
-  // 최종 원형도 = 반지름 일관성 + 둘레 비율 + 원주율 정확도 (원주율 정확도 중심)
-  return (radiusConsistency * 0.5 + circumferenceRatio * 0.2 + piAccuracy * 0.3)
+  // 원주율 정확도를 지수적으로 평가 (매우 완화됨)
+  const piAccuracy = Math.exp(-piError * 3) // 오차가 작을수록 점진적으로 높은 점수
+  
+  // 둘레 비율 정확도
+  const circumferenceRatio = Math.min(perimeter, theoreticalCircumference) / Math.max(perimeter, theoreticalCircumference)
+  
+  // 최종 원형도 = 원주율 정확도 중심 (85%), 반지름 일관성 (10%), 둘레 비율 (5%)
+  return Math.min(1, piAccuracy * 0.85 + radiusConsistency * 0.10 + circumferenceRatio * 0.05)
 }
 
 // 경로의 연속성/부드러움 측정
@@ -140,41 +144,50 @@ export function scoreCircle(points: Point[]): ScoringResult {
   const smoothness = calculateSmoothness(points)
   const completeness = calculateCompleteness(points)
   
-  // 원주율 기반 엄격한 채점 - 정확도 중심으로 강화
+  // 원주율 기반 초정밀 채점 - 소수점 3자리 정확도
   const accuracy = circularity
-  const score = Math.round(
-    accuracy * 0.90 +        // 정확도(원형도) 90%
-    smoothness * 0.07 +      // 부드러움 7% 
-    completeness * 0.03      // 완전성 3%
-  ) * 100
+  const rawScore = (
+    accuracy * 0.97 +        // 정확도(원주율) 97%
+    smoothness * 0.02 +      // 부드러움 2% 
+    completeness * 0.01      // 완전성 1%
+  )
   
-  // 매우 엄격한 임계값 적용 - 원주율이 정확하지 않으면 큰 감점
-  let finalScore = score
-  if (accuracy < 0.7) {
-    finalScore = Math.min(score, 30)  // 매우 낮은 점수
-  } else if (accuracy < 0.85) {
-    finalScore = Math.min(score, 60)  // 보통 점수 제한
-  } else if (accuracy < 0.95) {
-    finalScore = Math.min(score, 85)  // 고득점 제한
+  // 소수점 3자리 정밀 점수 계산
+  let finalScore = rawScore * 100
+  
+  // 원주율 정확도에 따른 매우 완화된 점수 조정
+  if (accuracy < 0.05) {
+    finalScore = Math.min(finalScore, 15.000)   // 매우 낮은 정확도
+  } else if (accuracy < 0.1) {
+    finalScore = Math.min(finalScore, 30.000)   // 낮은 정확도
+  } else if (accuracy < 0.2) {
+    finalScore = Math.min(finalScore, 50.000)   // 보통 이하 정확도
+  } else if (accuracy < 0.4) {
+    finalScore = Math.min(finalScore, 70.000)   // 보통 정확도
+  } else if (accuracy < 0.6) {
+    finalScore = Math.min(finalScore, 85.000)   // 높은 정확도
+  } else if (accuracy < 0.8) {
+    finalScore = Math.min(finalScore, 95.000)   // 매우 높은 정확도
   }
+  // accuracy >= 0.8일 때만 95점 이상 가능
   
   let feedback = ""
-  if (finalScore >= 95) {
-    feedback = "Perfect circle! 🎉"
-  } else if (finalScore >= 85) {
-    feedback = "Excellent circle! 👏"
-  } else if (finalScore >= 75) {
+  if (finalScore >= 99.000) {
+    feedback = "Perfect circle! Very close to π accuracy! 🎉"
+  } else if (finalScore >= 95.000) {
+    feedback = "Excellent circle! High π accuracy! 👏"
+  } else if (finalScore >= 85.000) {
     feedback = "Good circle! Try drawing it a bit more accurately."
-  } else if (finalScore >= 65) {
+  } else if (finalScore >= 70.000) {
     feedback = "Decent circle. Try making it more round."
-  } else if (finalScore >= 45) {
+  } else if (finalScore >= 50.000) {
     feedback = "Close to a circle shape but needs improvement."
   } else {
     feedback = "Try again! Draw a more round circle."
   }
   
   return {
-    score: Math.min(100, Math.max(0, finalScore)),
+    score: Number(Math.min(100.000, Math.max(0.000, finalScore)).toFixed(3)),
     feedback,
     details: {
       accuracy: Math.round(accuracy * 100),
@@ -184,11 +197,11 @@ export function scoreCircle(points: Point[]): ScoringResult {
   }
 }
 
-// 별(5각별) 채점 알고리즘
+// 5각별 정밀 채점 알고리즘
 export function scoreStar(points: Point[]): ScoringResult {
   if (points.length < 15) {
     return {
-      score: 0,
+      score: 0.000,
       feedback: "The line is too short. Try drawing a bigger star.",
       details: {
         accuracy: 0,
@@ -206,46 +219,69 @@ export function scoreStar(points: Point[]): ScoringResult {
   const maxRadius = Math.max(...radii)
   const minRadius = Math.min(...radii)
   
-  // 별의 뾰족한 부분과 들어간 부분의 비율 (이상적으로는 약 0.4-0.6)
+  // 별의 안쪽/바깥쪽 반지름 비율 (황금비율 근사: 약 0.618)
   const radiusRatio = minRadius / maxRadius
-  const idealRatio = 0.5
-  const ratioScore = Math.max(0, 1 - Math.abs(radiusRatio - idealRatio) * 2)
+  const idealRatio = 0.618 // 황금비율 (진짜 5각별의 이론적 비율)
+  const ratioAccuracy = Math.exp(-Math.abs(radiusRatio - idealRatio) * 2) // 매우 완화된 평가
   
-  // 각도별 거리 변화 패턴 분석 (별은 5개의 피크를 가져야 함)
-  let peaks = 0
+  // 5각별 꼭짓점 감지 (정확하게 5개의 피크 찾기)
+  const starPeaks = findStarPeaks(radii)
+  const peakScore = starPeaks.length === 5 ? 1 : Math.max(0, 1 - Math.abs(starPeaks.length - 5) / 5)
   
-  for (let i = 1; i < radii.length - 1; i++) {
-    if (radii[i] > radii[i-1] && radii[i] > radii[i+1]) peaks++
-  }
+  // 각 꼭짓점 간의 각도 간격 검증 (72도 간격)
+  const angleConsistency = calculateStarAngleConsistency(starPeaks, points, center)
   
-  // 이상적으로는 5개의 주요 피크를 가져야 함
-  const peakScore = Math.max(0, 1 - Math.abs(peaks - 5) / 5)
+  // 5각별 대칭성 검증
+  const starSymmetry = calculateStarSymmetry(starPeaks, points, center)
   
   const completeness = calculateCompleteness(points)
   
-  const accuracy = (ratioScore * 0.6 + peakScore * 0.4)
-  const score = Math.round((accuracy * 0.80 + smoothness * 0.10 + completeness * 0.10) * 100)
+  // 5각별 정확도 계산 - 반지름 비율과 각도 간격이 핵심
+  const accuracy = (
+    peakScore * 0.20 +         // 5개 꼭짓점 존재 여부
+    ratioAccuracy * 0.35 +     // 황금비율 정확도 (핵심)
+    angleConsistency * 0.35 +  // 72도 간격 정확도 (핵심)
+    starSymmetry * 0.10        // 대칭성
+  )
   
-  // 별은 더 까다롭게 채점 - 피크가 정확하지 않으면 점수 감점
-  const finalScore = peakScore < 0.4 ? Math.min(score, 25) : score
+  // 소수점 3자리 정밀 점수 계산
+  let rawScore = (accuracy * 0.80 + smoothness * 0.12 + completeness * 0.08) * 100
+  
+  // 5각별 정확도에 따른 매우 완화된 점수 조정
+  if (peakScore < 0.2 || ratioAccuracy < 0.02) {
+    rawScore = Math.min(rawScore, 15.000)    // 기본 별 모양도 안 됨
+  } else if (ratioAccuracy < 0.08 || angleConsistency < 0.05) {
+    rawScore = Math.min(rawScore, 35.000)    // 별 모양이지만 5각별과 거리 있음
+  } else if (ratioAccuracy < 0.2 || angleConsistency < 0.1) {
+    rawScore = Math.min(rawScore, 55.000)    // 어느 정도 5각별 형태
+  } else if (ratioAccuracy < 0.4 || angleConsistency < 0.3) {
+    rawScore = Math.min(rawScore, 75.000)    // 좋은 5각별
+  } else if (ratioAccuracy < 0.6 || angleConsistency < 0.5) {
+    rawScore = Math.min(rawScore, 90.000)    // 매우 좋은 5각별
+  } else if (ratioAccuracy < 0.8 || angleConsistency < 0.7) {
+    rawScore = Math.min(rawScore, 95.000)    // 거의 완벽한 5각별
+  }
+  // ratioAccuracy >= 0.8 && angleConsistency >= 0.7일 때만 95점 이상 가능
+  
+  const finalScore = rawScore
   
   let feedback = ""
-  if (finalScore >= 95) {
-    feedback = "Perfect star! ⭐️"
-  } else if (finalScore >= 85) {
-    feedback = "Excellent star! 👏"
-  } else if (finalScore >= 75) {
-    feedback = "Good star! Try making the points sharper."
-  } else if (finalScore >= 65) {
-    feedback = "Decent star. Try making the 5 points more distinct."
-  } else if (finalScore >= 45) {
-    feedback = "Close to a star shape but needs improvement."
+  if (finalScore >= 99.000) {
+    feedback = "Perfect 5-pointed star! Golden ratio and angle spacing are very accurate! ⭐️"
+  } else if (finalScore >= 95.000) {
+    feedback = "Excellent 5-pointed star! Ratio and angles are very accurate! 👏"
+  } else if (finalScore >= 85.000) {
+    feedback = "Good 5-pointed star! Try making the points a bit sharper."
+  } else if (finalScore >= 70.000) {
+    feedback = "Decent star. Try making the 5 points more pointed."
+  } else if (finalScore >= 50.000) {
+    feedback = "Close to a star shape but needs improvement as a 5-pointed star."
   } else {
-    feedback = "Try again! Draw a star with 5 sharp points."
+    feedback = "Try again! Draw a sharp star with 5 pointed tips."
   }
   
   return {
-    score: Math.min(100, Math.max(0, finalScore)),
+    score: Number(Math.min(100.000, Math.max(0.000, finalScore)).toFixed(3)),
     feedback,
     details: {
       accuracy: Math.round(accuracy * 100),
@@ -255,11 +291,11 @@ export function scoreStar(points: Point[]): ScoringResult {
   }
 }
 
-// 사각형 채점 알고리즘
+// 정사각형 정밀 채점 알고리즘
 export function scoreSquare(points: Point[]): ScoringResult {
   if (points.length < 12) {
     return {
-      score: 0,
+      score: 0.000,
       feedback: "The line is too short. Try drawing a bigger square.",
       details: {
         accuracy: 0,
@@ -271,45 +307,69 @@ export function scoreSquare(points: Point[]): ScoringResult {
 
   // 코너 감지 (각도 변화가 큰 지점들)
   const corners = findCorners(points)
-  const cornerScore = Math.max(0, 1 - Math.abs(corners.length - 4) / 4)
+  const cornerScore = corners.length === 4 ? 1 : Math.max(0, 1 - Math.abs(corners.length - 4) / 4)
   
   // 직선성 측정 (각 변이 얼마나 직선에 가까운지)
   const straightness = calculateStraightness(points, corners)
   
-  // 직각 측정 (코너들이 얼마나 90도에 가까운지)
+  // 직각 측정 (코너들이 얼마나 90도에 가까운지) - 핵심 지표
   const rightAngleScore = calculateRightAngles(corners)
   
   // 변의 길이 균형 (4개 변의 길이가 비슷한지)
   const lengthBalance = calculateLengthBalance(corners)
   
-  // 정사각형 비율 검증 (가로:세로 1:1에 가까운지)
+  // 정사각형 비율 검증 (가로:세로 1:1에 가까운지) - 중요 지표
   const squareRatio = calculateSquareRatio(corners)
   
   const completeness = calculateCompleteness(points)
   
-  const accuracy = (cornerScore * 0.25 + straightness * 0.25 + rightAngleScore * 0.35 + lengthBalance * 0.10 + squareRatio * 0.05)
-  const score = Math.round((accuracy * 0.90 + completeness * 0.10) * 100)
+  // 정사각형 정확도 계산 - 직각과 비율이 가장 중요
+  const accuracy = (
+    cornerScore * 0.15 + 
+    straightness * 0.15 + 
+    rightAngleScore * 0.45 +   // 직각 정확도가 핵심 (45%)
+    lengthBalance * 0.15 + 
+    squareRatio * 0.10         // 가로세로 비율 1:1 (10%)
+  )
   
-  // 사각형 채점 기준 완화 - 코너가 4개가 아니거나 직각이 부정확하면 감점
-  const finalScore = (cornerScore < 0.5 || rightAngleScore < 0.3) ? Math.min(score, 40) : score
+  // 소수점 3자리 정밀 점수 계산
+  let rawScore = (accuracy * 0.85 + completeness * 0.15) * 100
+  
+  // 정사각형 정확도에 따른 매우 완화된 점수 조정
+  if (rightAngleScore < 0.05 || cornerScore < 0.2) {
+    rawScore = Math.min(rawScore, 20.000)    // 기본 형태도 안 됨
+  } else if (rightAngleScore < 0.1 || squareRatio < 0.3) {
+    rawScore = Math.min(rawScore, 40.000)    // 사각형이지만 정사각형과 거리 있음
+  } else if (rightAngleScore < 0.25) {
+    rawScore = Math.min(rawScore, 60.000)    // 어느 정도 사각형 형태
+  } else if (rightAngleScore < 0.4) {
+    rawScore = Math.min(rawScore, 75.000)    // 좋은 사각형
+  } else if (rightAngleScore < 0.6) {
+    rawScore = Math.min(rawScore, 88.000)    // 매우 좋은 사각형
+  } else if (rightAngleScore < 0.8 || squareRatio < 0.7) {
+    rawScore = Math.min(rawScore, 95.000)    // 거의 완벽한 사각형
+  }
+  // rightAngleScore >= 0.8 && squareRatio >= 0.7일 때만 95점 이상 가능
+  
+  const finalScore = rawScore
   
   let feedback = ""
-  if (finalScore >= 95) {
-    feedback = "Perfect square! 🟦"
-  } else if (finalScore >= 85) {
-    feedback = "Excellent square! 👏"
-  } else if (finalScore >= 75) {
-    feedback = "Good square! Try drawing the corners more accurately."
-  } else if (finalScore >= 65) {
-    feedback = "Decent square. Try making the 4 right angles more precise."
-  } else if (finalScore >= 45) {
-    feedback = "Close to a square shape but needs improvement."
+  if (finalScore >= 99.000) {
+    feedback = "완벽한 정사각형! 모든 내각이 90도에 매우 근사합니다! 🟦"
+  } else if (finalScore >= 95.000) {
+    feedback = "뛰어난 정사각형! 직각 정확도와 비율이 매우 높습니다! 👏"
+  } else if (finalScore >= 85.000) {
+    feedback = "좋은 정사각형입니다! 모서리를 조금 더 정확하게 그려보세요."
+  } else if (finalScore >= 70.000) {
+    feedback = "괜찮은 사각형입니다. 4개 직각을 더 정확하게 만들어보세요."
+  } else if (finalScore >= 50.000) {
+    feedback = "사각형 모양에 가깝지만 정사각형으로 개선이 필요합니다."
   } else {
-    feedback = "Try again! Draw a square with 4 right angles."
+    feedback = "다시 시도해보세요! 4개 직각과 같은 변 길이의 사각형을 그려보세요."
   }
   
   return {
-    score: Math.min(100, Math.max(0, finalScore)),
+    score: Number(Math.min(100.000, Math.max(0.000, finalScore)).toFixed(3)),
     feedback,
     details: {
       accuracy: Math.round(accuracy * 100),
@@ -417,12 +477,13 @@ function pointToLineDistance(point: Point, lineStart: Point, lineEnd: Point): nu
   return Math.abs(A * point.x + B * point.y + C) / Math.sqrt(A * A + B * B)
 }
 
-// 직각 계산 (NaN 문제 해결)
+// 직각 정밀 계산 (90도 정확도 측정)
 function calculateRightAngles(corners: Point[]): number {
   if (corners.length !== 4) return 0
   
-  let rightAngleScore = 0
-  let validAngles = 0
+  let totalAngleScore = 0
+  const targetAngle = Math.PI / 2 // 90도
+  const angles: number[] = []
   
   for (let i = 0; i < corners.length; i++) {
     const p1 = corners[(i - 1 + corners.length) % corners.length]
@@ -436,23 +497,30 @@ function calculateRightAngles(corners: Point[]): number {
     const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y)
     const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y)
     
-    if (mag1 > 1 && mag2 > 1) { // 최소 거리 확보로 NaN 방지
+    if (mag1 > 1 && mag2 > 1) {
       const cosValue = Math.abs(dot) / (mag1 * mag2)
-      // cosValue가 1을 초과하지 않도록 클램핑
       const clampedCosValue = Math.min(1, Math.max(0, cosValue))
       const angle = Math.acos(clampedCosValue)
-      const deviationFrom90 = Math.abs(angle - Math.PI / 2)
+      angles.push(angle)
       
-      // 80도~100도 범위를 적용 (±10도로 완화)
-      const allowedDeviation = Math.PI / 18 // 10도
-      if (deviationFrom90 <= allowedDeviation) {
-        rightAngleScore += Math.max(0, 1 - deviationFrom90 / allowedDeviation)
-      }
-      validAngles++
+      const deviationFrom90 = Math.abs(angle - targetAngle)
+      
+      // 매우 완화된 직각 평가 - 지수적 감소  
+      const angleAccuracy = Math.exp(-deviationFrom90 * 4) // 매우 완화된 평가
+      totalAngleScore += angleAccuracy
     }
   }
   
-  return validAngles > 0 ? rightAngleScore / validAngles : 0
+  // 네 각의 합이 360도에 가까운지 추가 검증
+  if (angles.length === 4) {
+    const totalAngleDegrees = angles.reduce((sum, angle) => sum + angle, 0) * (180 / Math.PI)
+    const anglesSumAccuracy = Math.max(0, 1 - Math.abs(totalAngleDegrees - 360) / 60)
+    
+    // 개별 각도 정확도(85%)와 총합 정확도(15%) 결합
+    return (totalAngleScore / 4) * 0.85 + anglesSumAccuracy * 0.15
+  }
+  
+  return totalAngleScore / Math.max(1, angles.length)
 }
 
 // 변 길이 균형 계산
@@ -501,12 +569,12 @@ function calculateSquareRatio(corners: Point[]): number {
   return (diagonalRatio * 0.4 + aspectRatio * 0.6)
 }
 
-// 삼각형 채점 알고리즘
+// 정삼각형 정밀 채점 알고리즘
 export function scoreTriangle(points: Point[]): ScoringResult {
   if (points.length < 10) {
     return {
-      score: 0,
-      feedback: "The line is too short. Try drawing a bigger triangle.",
+      score: 0.000,
+      feedback: "선이 너무 짧습니다. 더 큰 삼각형을 그려보세요.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -522,37 +590,64 @@ export function scoreTriangle(points: Point[]): ScoringResult {
   // 직선성 측정 (3개 변이 얼마나 직선에 가까운지)
   const straightness = calculateTriangleStraightness(points, corners)
   
-  // 삼각형의 변 길이 비율 (너무 찌그러지지 않았는지)
+  // 삼각형의 변 길이 비율 (1:1:1에 가까운지)
   const proportionScore = calculateTriangleProportions(corners)
   
-  // 정삼각형 내각 검증 (세 각이 모두 60도에 가까운지)
+  // 정삼각형 내각 검증 (세 각이 모두 60도에 가까운지) - 핵심 지표
   const equilateralScore = calculateEquilateralAngles(corners)
+  
+  // 정삼각형 대칭성 검증 추가
+  const symmetryScore = calculateTriangleSymmetry(corners)
   
   const completeness = calculateCompleteness(points)
   
-  const accuracy = (cornerScore * 0.30 + straightness * 0.25 + proportionScore * 0.20 + equilateralScore * 0.25)
-  const score = Math.round((accuracy * 0.90 + completeness * 0.10) * 100)
+  // 정삼각형 정확도 계산 - 내각 60도가 가장 중요
+  const accuracy = (
+    cornerScore * 0.15 + 
+    straightness * 0.15 + 
+    proportionScore * 0.25 + 
+    equilateralScore * 0.40 +  // 내각 60도 정확도가 핵심 (40%)
+    symmetryScore * 0.05
+  )
   
-  // 삼각형 매우 까다롭게 채점 - 코너가 3개가 아니거나 내각이 60도에서 멀면 큰 감점
-  const finalScore = (cornerScore < 0.8 || equilateralScore < 0.3) ? Math.min(score, 30) : score
+  // 소수점 3자리 정밀 점수 계산
+  let rawScore = (accuracy * 0.85 + completeness * 0.15) * 100
+  
+  // 정삼각형 정확도에 따른 매우 완화된 점수 조정
+  if (equilateralScore < 0.05 || cornerScore < 0.2) {
+    rawScore = Math.min(rawScore, 18.000)    // 기본 형태도 안 됨
+  } else if (equilateralScore < 0.1) {
+    rawScore = Math.min(rawScore, 35.000)    // 삼각형이지만 정삼각형과 거리 있음
+  } else if (equilateralScore < 0.25) {
+    rawScore = Math.min(rawScore, 55.000)    // 어느 정도 정삼각형 형태
+  } else if (equilateralScore < 0.4) {
+    rawScore = Math.min(rawScore, 75.000)    // 좋은 정삼각형
+  } else if (equilateralScore < 0.6) {
+    rawScore = Math.min(rawScore, 88.000)    // 매우 좋은 정삼각형
+  } else if (equilateralScore < 0.8) {
+    rawScore = Math.min(rawScore, 95.000)    // 거의 완벽한 정삼각형
+  }
+  // equilateralScore >= 0.8일 때만 95점 이상 가능
+  
+  const finalScore = rawScore
   
   let feedback = ""
-  if (finalScore >= 95) {
-    feedback = "Perfect triangle! 🔺"
-  } else if (finalScore >= 85) {
-    feedback = "Excellent triangle! 👏"
-  } else if (finalScore >= 75) {
-    feedback = "Good triangle! Try drawing the vertices more accurately."
-  } else if (finalScore >= 65) {
-    feedback = "Decent triangle. Try connecting the 3 straight lines more precisely."
-  } else if (finalScore >= 45) {
-    feedback = "Close to a triangle shape but needs improvement."
+  if (finalScore >= 99.000) {
+    feedback = "완벽한 정삼각형! 모든 내각이 60도에 매우 근사합니다! 🔺"
+  } else if (finalScore >= 95.000) {
+    feedback = "뛰어난 정삼각형! 내각 정확도가 매우 높습니다! 👏"
+  } else if (finalScore >= 85.000) {
+    feedback = "좋은 정삼각형입니다! 꼭짓점을 조금 더 정확하게 그려보세요."
+  } else if (finalScore >= 70.000) {
+    feedback = "괜찮은 정삼각형입니다. 세 각을 더 정확히 60도로 만들어보세요."
+  } else if (finalScore >= 50.000) {
+    feedback = "삼각형 모양에 가깝지만 정삼각형으로 개선이 필요합니다."
   } else {
-    feedback = "Try again! Draw a triangle made of 3 straight lines."
+    feedback = "다시 시도해보세요! 세 변의 길이가 같은 정삼각형을 그려보세요."
   }
   
   return {
-    score: Math.min(100, Math.max(0, finalScore)),
+    score: Number(Math.min(100.000, Math.max(0.000, finalScore)).toFixed(3)),
     feedback,
     details: {
       accuracy: Math.round(accuracy * 100),
@@ -717,13 +812,13 @@ function calculateTriangleProportions(corners: Point[]): number {
   return (ratioScore * 0.7 + areaScore * 0.3)
 }
 
-// 정삼각형 내각 검증 (세 각이 모두 60도에 가까운지)
+// 정삼각형 내각 정밀 검증 (세 각이 모두 60도에 가까운지)
 function calculateEquilateralAngles(corners: Point[]): number {
   if (corners.length !== 3) return 0
   
-  let angleScore = 0
+  let totalAngleScore = 0
   const targetAngle = Math.PI / 3 // 60도
-  const allowedDeviation = Math.PI / 36 // ±5도
+  const angles: number[] = []
   
   for (let i = 0; i < 3; i++) {
     const p1 = corners[(i - 1 + 3) % 3]
@@ -742,15 +837,59 @@ function calculateEquilateralAngles(corners: Point[]): number {
       const cosValue = dot / (mag1 * mag2)
       const clampedCosValue = Math.min(1, Math.max(-1, cosValue))
       const angle = Math.acos(Math.abs(clampedCosValue))
+      angles.push(angle)
       
       const deviationFrom60 = Math.abs(angle - targetAngle)
       
-      // 55도~65도 범위를 엄격하게 적용
-      if (deviationFrom60 <= allowedDeviation) {
-        angleScore += Math.max(0, 1 - deviationFrom60 / allowedDeviation)
-      }
+      // 매우 완화된 각도 평가 - 지수적 감소
+      const angleAccuracy = Math.exp(-deviationFrom60 * 5) // 매우 완화된 평가
+      totalAngleScore += angleAccuracy
     }
   }
   
-  return angleScore / 3 // 평균 점수 반환
+  // 세 각의 합이 180도에 가까운지 추가 검증
+  if (angles.length === 3) {
+    const totalAngleDegrees = angles.reduce((sum, angle) => sum + angle, 0) * (180 / Math.PI)
+    const anglesSumAccuracy = Math.max(0, 1 - Math.abs(totalAngleDegrees - 180) / 30)
+    
+    // 개별 각도 정확도(80%)와 총합 정확도(20%) 결합
+    return (totalAngleScore / 3) * 0.8 + anglesSumAccuracy * 0.2
+  }
+  
+  return totalAngleScore / 3
+}
+
+// 정삼각형 대칭성 검증
+function calculateTriangleSymmetry(corners: Point[]): number {
+  if (corners.length !== 3) return 0
+  
+  // 세 변의 길이 계산
+  const side1 = distance(corners[0], corners[1])
+  const side2 = distance(corners[1], corners[2])
+  const side3 = distance(corners[2], corners[0])
+  
+  const sides = [side1, side2, side3]
+  const avgSideLength = sides.reduce((sum, len) => sum + len, 0) / 3
+  
+  // 변 길이 균등성 (정삼각형의 핵심 특성)
+  let sideDeviationSum = 0
+  for (const side of sides) {
+    sideDeviationSum += Math.abs(side - avgSideLength) / avgSideLength
+  }
+  
+  const sideLengthConsistency = Math.max(0, 1 - sideDeviationSum * 2)
+  
+  // 중심점으로부터 각 꼭짓점까지의 거리 (외접원 반지름)
+  const center = getCenterPoint(corners)
+  const radii = corners.map(corner => distance(corner, center))
+  const avgRadius = radii.reduce((sum, r) => sum + r, 0) / 3
+  
+  let radiusDeviationSum = 0
+  for (const radius of radii) {
+    radiusDeviationSum += Math.abs(radius - avgRadius) / avgRadius
+  }
+  
+  const radiusConsistency = Math.max(0, 1 - radiusDeviationSum * 2)
+  
+  return sideLengthConsistency * 0.7 + radiusConsistency * 0.3
 }

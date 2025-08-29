@@ -20,12 +20,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (score < 0 || score > 100) {
+    if (score < 0 || score > 100 || !Number.isFinite(score)) {
       return NextResponse.json(
-        { error: 'Score must be between 0 and 100' },
+        { error: 'Score must be between 0.000 and 100.000' },
         { status: 400 }
       )
     }
+
+    // 소수점 3자리로 제한
+    const formattedScore = Number(score.toFixed(3))
 
     // 기존 최고 점수 확인
     const { data: existingScore, error: fetchError } = await supabaseServer
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const isNewRecord = !existingScore || score > existingScore.high_score
+    const isNewRecord = !existingScore || formattedScore > existingScore.high_score
 
     if (isNewRecord) {
       // 신기록인 경우에만 업데이트
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
         .upsert({
           user_id: userId,
           shape,
-          high_score: score,
+          high_score: formattedScore,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,shape'
