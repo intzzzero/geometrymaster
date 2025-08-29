@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { SHAPES, type ShapeType } from '@/lib/supabase-server'
 
+// ISO 8601 주차 계산 함수
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { userId, shape, score } = await request.json()
@@ -30,12 +39,18 @@ export async function POST(request: NextRequest) {
     // 소수점 3자리로 제한
     const formattedScore = Number(score.toFixed(3))
 
-    // 기존 최고 점수 확인
+    // 현재 주차 정보
+    const currentWeekYear = new Date().getFullYear()
+    const currentWeekNumber = getWeekNumber(new Date())
+
+    // 현재 주간 기존 최고 점수 확인
     const { data: existingScore, error: fetchError } = await supabaseServer
       .from('scores')
       .select('high_score')
       .eq('user_id', userId)
       .eq('shape', shape)
+      .eq('week_year', currentWeekYear)
+      .eq('week_number', currentWeekNumber)
       .maybeSingle()
 
     if (fetchError) {
@@ -56,9 +71,12 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           shape,
           high_score: formattedScore,
-          updated_at: new Date().toISOString()
+          week_year: currentWeekYear,
+          week_number: currentWeekNumber,
+          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,shape'
+          onConflict: 'user_id,shape,week_year,week_number'
         })
         .select()
         .single()

@@ -335,7 +335,7 @@ export default function RankingPage() {
 																: 'text-[--color-toss-blue]'
 														}`}
 													>
-														{item.score} pts
+														{item.score.toFixed(3)} pts
 													</p>
 												</div>
 											</div>
@@ -386,7 +386,7 @@ export default function RankingPage() {
 												</div>
 												<div className="text-right flex-shrink-0">
 													<p className="text-lg md:text-xl font-bold text-[--color-toss-blue]">
-														{userInfo.score} pts
+														{userInfo.score.toFixed(3)} pts
 													</p>
 												</div>
 											</div>

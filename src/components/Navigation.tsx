@@ -45,6 +45,12 @@ export default function Navigation({
 									Rankings
 								</a>
 								<a
+									href="/hall-of-fame"
+									className="px-4 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] font-medium transition-colors cursor-pointer border-r border-[--color-toss-gray-200]"
+								>
+									Hall of Fame
+								</a>
+								<a
 									href="https://buymeacoffee.com/intzzzero"
 									target="_blank"
 									rel="noopener noreferrer"
@@ -90,6 +96,12 @@ export default function Navigation({
 									className="px-4 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] font-medium transition-colors cursor-pointer border-r border-[--color-toss-gray-200]"
 								>
 									Rankings
+								</a>
+								<a
+									href="/hall-of-fame"
+									className="px-4 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] font-medium transition-colors cursor-pointer border-r border-[--color-toss-gray-200]"
+								>
+									Hall of Fame
 								</a>
 								<a
 									href="https://buymeacoffee.com/intzzzero"
@@ -204,6 +216,13 @@ export default function Navigation({
 								onClick={() => setShowMobileMenu(false)}
 							>
 								Rankings
+							</a>
+							<a
+								href="/hall-of-fame"
+								className="block px-3 py-2 text-sm text-[--color-toss-gray-600] hover:text-[--color-toss-blue] hover:bg-[--color-toss-gray-50] rounded-[--radius-toss] transition-colors"
+								onClick={() => setShowMobileMenu(false)}
+							>
+								Hall of Fame
 							</a>
 							<a
 								href="https://buymeacoffee.com/intzzzero"
