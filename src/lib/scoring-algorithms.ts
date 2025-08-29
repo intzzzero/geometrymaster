@@ -355,17 +355,17 @@ export function scoreSquare(points: Point[]): ScoringResult {
   
   let feedback = ""
   if (finalScore >= 99.000) {
-    feedback = "완벽한 정사각형! 모든 내각이 90도에 매우 근사합니다! 🟦"
+    feedback = "Perfect square! All interior angles are very close to 90°! 🟦"
   } else if (finalScore >= 95.000) {
-    feedback = "뛰어난 정사각형! 직각 정확도와 비율이 매우 높습니다! 👏"
+    feedback = "Excellent square! Right-angle accuracy and proportions are very high! 👏"
   } else if (finalScore >= 85.000) {
-    feedback = "좋은 정사각형입니다! 모서리를 조금 더 정확하게 그려보세요."
+    feedback = "Good square! Try drawing the corners a bit more precisely."
   } else if (finalScore >= 70.000) {
-    feedback = "괜찮은 사각형입니다. 4개 직각을 더 정확하게 만들어보세요."
+    feedback = "Decent quadrilateral. Try making all four right angles more accurate."
   } else if (finalScore >= 50.000) {
-    feedback = "사각형 모양에 가깝지만 정사각형으로 개선이 필요합니다."
+    feedback = "Close to a square shape but needs improvement to be a true square."
   } else {
-    feedback = "다시 시도해보세요! 4개 직각과 같은 변 길이의 사각형을 그려보세요."
+    feedback = "Try again! Draw a square with four right angles and equal side lengths."
   }
   
   return {
@@ -574,7 +574,7 @@ export function scoreTriangle(points: Point[]): ScoringResult {
   if (points.length < 10) {
     return {
       score: 0.000,
-      feedback: "선이 너무 짧습니다. 더 큰 삼각형을 그려보세요.",
+      feedback: "The line is too short. Try drawing a bigger triangle.",
       details: {
         accuracy: 0,
         smoothness: 0,
@@ -633,17 +633,17 @@ export function scoreTriangle(points: Point[]): ScoringResult {
   
   let feedback = ""
   if (finalScore >= 99.000) {
-    feedback = "완벽한 정삼각형! 모든 내각이 60도에 매우 근사합니다! 🔺"
+    feedback = "Perfect equilateral triangle! All interior angles are very close to 60°! 🔺"
   } else if (finalScore >= 95.000) {
-    feedback = "뛰어난 정삼각형! 내각 정확도가 매우 높습니다! 👏"
+    feedback = "Excellent equilateral triangle! Angle accuracy is very high! 👏"
   } else if (finalScore >= 85.000) {
-    feedback = "좋은 정삼각형입니다! 꼭짓점을 조금 더 정확하게 그려보세요."
+    feedback = "Good equilateral triangle! Try drawing the vertices a bit more precisely."
   } else if (finalScore >= 70.000) {
-    feedback = "괜찮은 정삼각형입니다. 세 각을 더 정확히 60도로 만들어보세요."
+    feedback = "Decent equilateral triangle. Try making all three angles closer to 60°."
   } else if (finalScore >= 50.000) {
-    feedback = "삼각형 모양에 가깝지만 정삼각형으로 개선이 필요합니다."
+    feedback = "Close to a triangle shape but needs improvement to be an equilateral triangle."
   } else {
-    feedback = "다시 시도해보세요! 세 변의 길이가 같은 정삼각형을 그려보세요."
+    feedback = "Try again! Draw an equilateral triangle with three equal sides."
   }
   
   return {
