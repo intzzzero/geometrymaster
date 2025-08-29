@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { SHAPES, type ShapeType } from '@/lib/supabase-server'
 
-// ISO 8601 주차 계산 함수
-function getWeekNumber(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  const dayNum = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+// 현재 연/월 반환 유틸리티
+function getCurrentYearMonth(date: Date): { year: number; month: number } {
+  return { year: date.getFullYear(), month: date.getMonth() + 1 }
 }
 
 export async function POST(request: NextRequest) {
@@ -39,18 +35,17 @@ export async function POST(request: NextRequest) {
     // 소수점 3자리로 제한
     const formattedScore = Number(score.toFixed(3))
 
-    // 현재 주차 정보
-    const currentWeekYear = new Date().getFullYear()
-    const currentWeekNumber = getWeekNumber(new Date())
+    // 현재 월 정보
+    const { year: currentYear, month: currentMonth } = getCurrentYearMonth(new Date())
 
-    // 현재 주간 기존 최고 점수 확인
+    // 현재 월간 기존 최고 점수 확인
     const { data: existingScore, error: fetchError } = await supabaseServer
       .from('scores')
       .select('high_score')
       .eq('user_id', userId)
       .eq('shape', shape)
-      .eq('week_year', currentWeekYear)
-      .eq('week_number', currentWeekNumber)
+      .eq('ranking_year', currentYear)
+      .eq('ranking_month', currentMonth)
       .maybeSingle()
 
     if (fetchError) {
@@ -64,19 +59,19 @@ export async function POST(request: NextRequest) {
     const isNewRecord = !existingScore || formattedScore > existingScore.high_score
 
     if (isNewRecord) {
-      // 신기록인 경우에만 업데이트
+      // 신기록인 경우에만 업데이트 (월간 기준)
       const { data, error } = await supabaseServer
         .from('scores')
         .upsert({
           user_id: userId,
           shape,
           high_score: formattedScore,
-          week_year: currentWeekYear,
-          week_number: currentWeekNumber,
+          ranking_year: currentYear,
+          ranking_month: currentMonth,
           updated_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,shape,week_year,week_number'
+          onConflict: 'user_id,shape,ranking_year,ranking_month'
         })
         .select()
         .single()
