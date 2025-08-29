@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { SHAPES } from '@/lib/supabase-client';
 import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
+import NicknameModal from '@/components/NicknameModal';
 
 interface RankingItem {
 	rank: number;
@@ -29,7 +30,8 @@ export default function RankingPage() {
 	const [userRank, setUserRank] = useState<number | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const { user, signInWithGoogle, signInWithGoogleRedirect, signOut } =
+	const [showNicknameModal, setShowNicknameModal] = useState(false);
+	const { user, signInWithGoogle, signInWithGoogleRedirect, signOut, updateNickname } =
 		useAuth();
 	const router = useRouter();
 
@@ -88,6 +90,20 @@ export default function RankingPage() {
 		return `#${rank}`;
 	};
 
+	const handleNicknameSave = async (nickname: string) => {
+		try {
+			await updateNickname(nickname);
+			setShowNicknameModal(false);
+		} catch (error) {
+			console.error('닉네임 업데이트 실패:', error);
+			throw error;
+		}
+	};
+
+	const handleNicknameCancel = () => {
+		setShowNicknameModal(false);
+	};
+
 	return (
 		<div className="min-h-screen bg-[--color-toss-gray-50] overflow-auto">
 			<Navigation
@@ -95,6 +111,7 @@ export default function RankingPage() {
 				onSignIn={signInWithGoogle}
 				onSignInRedirect={signInWithGoogleRedirect}
 				onSignOut={signOut}
+				onChangeNickname={() => setShowNicknameModal(true)}
 			/>
 
 			<div className="min-h-[calc(100vh-64px)] flex items-start justify-center p-4 pt-24">
@@ -390,6 +407,14 @@ export default function RankingPage() {
 					</div>
 				</div>
 			</div>
+
+			{/* 닉네임 설정 모달 */}
+			<NicknameModal
+				isOpen={showNicknameModal}
+				currentNickname={user?.nickname || ''}
+				onSave={handleNicknameSave}
+				onCancel={handleNicknameCancel}
+			/>
 		</div>
 	);
 }

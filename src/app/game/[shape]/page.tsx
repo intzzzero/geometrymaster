@@ -34,6 +34,7 @@ export default function GamePage() {
 	const [scoreSubmissionResult, setScoreSubmissionResult] =
 		useState<ScoreSubmissionResult | null>(null);
 	const [copySuccess, setCopySuccess] = useState(false);
+	const [canvasKey, setCanvasKey] = useState(0);
 
 	const shapeNames = {
 		[SHAPES.CIRCLE]: 'Circle',
@@ -130,6 +131,16 @@ export default function GamePage() {
 		setHasDrawing(path.length > 1);
 	};
 
+	// Try Again 기능 - 상태만 리셋하고 캔버스 재렌더링
+	const handleTryAgain = () => {
+		setScoringResult(null);
+		setScoreSubmissionResult(null);
+		setCopySuccess(false);
+		setDrawingData([]);
+		setHasDrawing(false);
+		setCanvasKey(prev => prev + 1); // 캔버스 강제 재렌더링
+	};
+
 	// 공유하기 기능
 	const handleShare = async () => {
 		if (!scoringResult) return;
@@ -209,6 +220,7 @@ export default function GamePage() {
 
 				{/* Full screen canvas */}
 				<DrawingCanvas
+					key={canvasKey}
 					fullScreen={true}
 					onDrawingComplete={handleDrawingComplete}
 					onDrawingChange={handleDrawingChange}
@@ -334,10 +346,7 @@ export default function GamePage() {
 									</button>
 									<div className="flex gap-3">
 										<button
-											onClick={() => {
-												setScoringResult(null);
-												window.location.reload();
-											}}
+											onClick={handleTryAgain}
 											className="btn-secondary flex-1 py-3"
 										>
 											Try Again
