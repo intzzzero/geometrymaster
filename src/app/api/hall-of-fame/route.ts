@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
     }
 
     // 데이터 형식 변환
-    const hallOfFame = hallOfFameData.map((item: any) => ({
+    const hallOfFame = hallOfFameData.map((item) => ({
       id: item.id,
       shape: item.shape,
       championScore: item.champion_score,
       rankingYear: item.ranking_year,
       rankingMonth: item.ranking_month,
       monthDisplay: `${item.ranking_year}-${String(item.ranking_month).padStart(2, '0')}`,
-      championNickname: item.users?.nickname || 'Anonymous',
+      championNickname: (item.users as { nickname?: string } | null)?.nickname || 'Anonymous',
       achievedAt: item.achieved_at
     }))
 
@@ -109,7 +109,7 @@ async function getYearStats(shape?: ShapeType) {
     // 연도별로 그룹화하고 통계 계산
     const yearMap = new Map()
 
-    data.forEach((record: any) => {
+    data.forEach((record) => {
       const year = record.ranking_year
       if (!yearMap.has(year)) {
         yearMap.set(year, {
@@ -122,7 +122,7 @@ async function getYearStats(shape?: ShapeType) {
         })
       }
 
-      const yearStat = yearMap.get(year)
+      const yearStat = yearMap.get(year)!
       yearStat.totalMonths++
       yearStat.shapes.add(record.shape)
       yearStat.highestScore = Math.max(yearStat.highestScore, record.champion_score)

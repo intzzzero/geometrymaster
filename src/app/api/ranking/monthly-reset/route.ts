@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Starting monthly ranking reset...')
 
-    // 월간 랭킹 초기화 함수 실행
-    const { data, error } = await supabaseServer
+    // 월간 럭킹 초기화 함수 실행
+    const { error } = await supabaseServer
       .rpc('initialize_monthly_ranking')
 
     if (error) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 }
 
 // 수동 초기화를 위한 GET 엔드포인트 (개발/테스트용)
-export async function GET(request: NextRequest) {
+export async function GET() {
   // 개발 환경에서만 허용
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { data, error } = await supabaseServer
+    const { error } = await supabaseServer
       .rpc('initialize_monthly_ranking')
 
     if (error) {

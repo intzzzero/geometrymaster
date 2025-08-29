@@ -299,7 +299,7 @@ export default function HallOfFamePage() {
 								</div>
 							) : (
 								<div className="space-y-3">
-									{hallOfFame.map((champion, index) => (
+									{hallOfFame.map((champion) => (
 										<div
 											key={champion.id}
 											className="flex items-center justify-between p-4 bg-white rounded-[--radius-toss] border border-[--color-toss-gray-200] shadow-sm hover:shadow-md transition-shadow"
