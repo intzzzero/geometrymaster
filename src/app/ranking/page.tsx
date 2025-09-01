@@ -31,8 +31,13 @@ export default function RankingPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showNicknameModal, setShowNicknameModal] = useState(false);
-	const { user, signInWithGoogle, signInWithGoogleRedirect, signOut, updateNickname } =
-		useAuth();
+	const {
+		user,
+		signInWithGoogle,
+		signInWithGoogleRedirect,
+		signOut,
+		updateNickname,
+	} = useAuth();
 	const router = useRouter();
 
 	const shapes = [
@@ -95,7 +100,7 @@ export default function RankingPage() {
 			await updateNickname(nickname);
 			setShowNicknameModal(false);
 		} catch (error) {
-			console.error('닉네임 업데이트 실패:', error);
+			console.error('Failed to update nickname:', error);
 			throw error;
 		}
 	};

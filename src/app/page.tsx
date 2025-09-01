@@ -60,7 +60,7 @@ export default function Home() {
 			await updateNickname(nickname);
 			setShowNicknameModal(false);
 		} catch (error) {
-			console.error('닉네임 업데이트 실패:', error);
+			console.error('Failed to update nickname:', error);
 			throw error; // NicknameModal에서 에러 처리
 		}
 	};
@@ -97,7 +97,11 @@ export default function Home() {
 	}
 
 	return (
-		<div className={`min-h-screen bg-[--color-toss-gray-50] ${showShapeSelector ? 'overflow-auto' : 'overflow-auto'}`}>
+		<div
+			className={`min-h-screen bg-[--color-toss-gray-50] ${
+				showShapeSelector ? 'overflow-auto' : 'overflow-auto'
+			}`}
+		>
 			<Navigation
 				user={user}
 				onSignIn={signInWithGoogle}
@@ -106,7 +110,11 @@ export default function Home() {
 				onChangeNickname={() => setShowNicknameModal(true)}
 			/>
 
-			<div className={`flex items-center justify-center p-4 pt-20 ${showShapeSelector ? 'min-h-screen pb-20' : 'min-h-[calc(100vh-64px)]'}`}>
+			<div
+				className={`flex items-center justify-center p-4 pt-20 ${
+					showShapeSelector ? 'min-h-screen pb-20' : 'min-h-[calc(100vh-64px)]'
+				}`}
+			>
 				<div className="max-w-md w-full">
 					<div className="text-center">
 						<h2 className="text-2xl text-[--color-toss-gray-600] font-medium">
